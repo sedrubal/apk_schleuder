@@ -61,9 +61,15 @@ def _extract_certificate(file_name):
     return os.path.join(SETTINGS['temp_dir'], cert_file.filename)
 
 
-def verify_apk_sig_fpr(file_name, fpr_sha256='', fpr_sha1='', fpr_md5=''):
-    """Verify the APK signature."""
-    if all((not fpr for fpr in [fpr_sha256, fpr_sha1, fpr_md5])):
+def verify_apk_sig_fpr(file_name, fprs):
+    """
+    Verify the APK signature.
+
+    fprs: a dict with
+          - keys: methods {'SHA256', 'SHA1', 'MD5'}
+          - their expected values (hexdigest)
+    """
+    if not any(fprs.values()):
         raise ValueError('At least one fingerprint should be given.')
 
     cert_file_name = _extract_certificate(file_name)
@@ -84,30 +90,15 @@ def verify_apk_sig_fpr(file_name, fpr_sha256='', fpr_sha1='', fpr_md5=''):
         replace(' ', '').replace('\t', '').replace('\n', '').lower()
     matches = fpr_regexp.search(stdout_text)
 
-    real_sha256_fpr = matches.group('SHA256').replace(':', '')
-    real_sha1_fpr = matches.group('SHA1').replace(':', '')
-    real_md5_fpr = matches.group('MD5').replace(':', '')
+    for method, expected_fpr in fprs.items():
+        real_fpr = matches.group(method).replace(':', '')
 
-    if fpr_sha256 and fpr_sha256.lower().replace(':', '') != real_sha256_fpr:
-        raise CryptoVerificationError(
-            file_name,
-            message='{0} fingerprint did not match. Expected {1} but was {2}'.
-            format('SHA256', fpr_sha256, real_sha256_fpr)
-        )
-
-    if fpr_sha1 and fpr_sha1.lower().replace(':', '') != real_sha1_fpr:
-        raise CryptoVerificationError(
-            file_name,
-            message='{0} fingerprint did not match. Expected {1} but was {2}'.
-            format('SHA1', fpr_sha1, real_sha1_fpr)
-        )
-
-    if fpr_md5 and fpr_md5.lower().replace(':', '') != real_md5_fpr:
-        raise CryptoVerificationError(
-            file_name,
-            message='{0} fingerprint did not match. Expected {1} but was {2}'.
-            format('MD5', fpr_md5, real_md5_fpr)
-        )
+        if expected_fpr and expected_fpr.lower().replace(':', '') != real_fpr:
+            raise CryptoVerificationError(
+                file_name,
+                message='{0} fingerprint did not match. Expected {1} but was {2}'.
+                format(method, expected_fpr, real_fpr)
+            )
 
 
 def verify_apk_sig(apk_file_name):

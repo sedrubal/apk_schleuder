@@ -87,6 +87,14 @@ SOURCES = {
             },
         },
     },
+    'faufablab': {
+        'github.com': {
+            'type': 'github',
+            'config': {
+                'repo': 'FAU-Inf2/fablab-android',
+            }
+        }
+    }
 }
 
 SETTINGS = {

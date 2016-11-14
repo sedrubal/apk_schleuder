@@ -24,8 +24,7 @@ def instantiate_sources():
     for app_name, app_managers in SOURCES.items():
         for manager_name, manager_config in app_managers.items():
             manager = manager_factory(manager_config['type'])(
-                name=app_name, repo_dir=SETTINGS['repo_dir'],
-                **manager_config['config']
+                name=app_name, **manager_config['config']
             )
             app_managers[manager_name] = manager
 
@@ -52,7 +51,7 @@ def get_latest_versions():
                 'manager_name': manager_name,
             }
         except Exception as err:
-            warn(str(err))
+            warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
 
     return results
 
@@ -81,7 +80,7 @@ def download_apks(app_versions):
                 '(from %s)' % info['manager_name'],
             )
         except Exception as err:
-            warn(str(err))
+            warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
 
 
 def main():
