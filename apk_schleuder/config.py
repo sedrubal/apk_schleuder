@@ -147,9 +147,10 @@ SOURCES = {
 
 SETTINGS = {
     'repo_dir': os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), 'fdroid_repo/'
+        os.path.dirname(os.path.dirname(__file__)), 'fdroid/repo/'
     ),
     'temp_dir': os.path.join(tempfile.gettempdir(), 'apk_schleuder/'),
     'keytool': 'keytool',
     'jarsigner': 'jarsigner',
 }
+SETTINGS['db_file'] = os.path.join(SETTINGS['repo_dir'], 'db.json')
