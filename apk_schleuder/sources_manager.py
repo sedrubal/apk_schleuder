@@ -2,26 +2,29 @@
 
 """Sources manager. Get meta information and APKs."""
 
-import abc
-from types import FunctionType
 import os
-from warnings import warn
+import re
+import abc
+import random
+import string
 import hashlib
+from warnings import warn
+from types import FunctionType
+from dateutil.parser import parse as parse_date
+
 import requests
 from bs4 import BeautifulSoup
-from . import utils
-from . import verify
 
+from . import utils, verify
 from .config import SETTINGS
 
 def manager_factory(manager_type):
     """Return the manager class for manager_type."""
-    if manager_type == 'web':
-        return WebManager
-    elif manager_type == 'github':
-        return GitHubManager
-    else:
-        raise ValueError('Manager type %s not found' % manager_type)
+    return {
+        'web': WebManager,
+        'github': GitHubManager,
+        'apkupdate': ApkUpdateManager,
+    }[manager_type]
 
 
 class BaseManager(object):
@@ -286,3 +289,67 @@ class GitHubManager(DownloadBasedManager):
             return arg
 
     _get_checksum = _get_fpr
+
+
+class ApkUpdateManager(WebManager):
+    """Download APKs from apkupdate.com."""
+    URL = 'https://apkupdate.com/apk/{project}'
+    APK_DOWNLOAD_URL = 'http://file.apkupdate.com/dl/' + \
+        '{rnd}/download/{year}/{month}/{apk_id}-{build_id}.apk'
+
+    def __init__(self, name, project, **kwargs):
+        super(ApkUpdateManager, self).__init__(
+            name=name, url=ApkUpdateManager.URL.format(project=project),
+            get_apk_url=ApkUpdateManager.apkupdate_get_apk_url,
+            get_apk_version=ApkUpdateManager.apkupdate_get_apk_version,
+            **kwargs
+        )
+        self.get_apk_checksums += [
+            ('SHA1', ApkUpdateManager.apkupdate_get_sha1_sum),
+            ('MD5', ApkUpdateManager.apkupdate_get_md5_sum),
+        ]
+        self.apk_signature_fingerprints.append(
+            ('SHA1', ApkUpdateManager.apkupdate_get_apk_sig_fpr),
+        )
+
+    @staticmethod
+    def apkupdate_get_md5_sum(soup):
+        """Return the MD5 sum from apkupdate.com site."""
+        return soup(text=re.compile('File APK Md5:'))[0].next.text
+
+    @staticmethod
+    def apkupdate_get_sha1_sum(soup):
+        """Return the SHA1 sum from apkupdate.com site."""
+        return soup(text=re.compile('File APK Sha1:'))[0].next.text
+
+    @staticmethod
+    def apkupdate_get_apk_sig_fpr(soup):
+        """Return the fpr of the apk sign. from apkupdate.com site."""
+        return soup(text=re.compile('APK Signature:'))[0].next.text
+
+    @staticmethod
+    def apkupdate_get_apk_url(soup):
+        """Return the download url for the APK on apkupdate.com site."""
+        build_id = list(
+            soup.select('.apks .title span')[0].children
+        )[1].strip().split(' ')[1].strip('()')
+        date = parse_date(
+            soup('span', text=re.compile('Publish Date'))[0].next.next.strip()
+        )
+        apk_id = soup.select('a[data-tag]')[0].\
+            attrs['data-tag'][len('apkupdate-'):]
+        rnd = ''.join((
+            random.choice(string.ascii_letters+string.digits)
+            for _ in range(62)
+        ))
+        return ApkUpdateManager.APK_DOWNLOAD_URL.format(
+            rnd=rnd, year=date.year, month=date.month,
+            apk_id=apk_id, build_id=build_id
+        )
+
+    @staticmethod
+    def apkupdate_get_apk_version(soup):
+        """Return the latest version of the APK on apkupdate.com site."""
+        return list(
+            soup.select('.apks .title span')[0].children
+        )[1].strip().split(' ')[0]
