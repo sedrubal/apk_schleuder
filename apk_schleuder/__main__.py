@@ -33,6 +33,10 @@ def main():
     schleuder = APKSchleuder(SOURCES)
     print('Searching for updates...')
     schleuder.update()
+    print('Verifying APKs...')
+    schleuder.verify()
+    # status
+    print()
     print_status(schleuder.get_status())
     # update fdroid
     print()

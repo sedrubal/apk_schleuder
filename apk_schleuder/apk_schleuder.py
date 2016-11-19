@@ -21,7 +21,7 @@ class APKSchleuder(object):
             self.sources[app_name] = {}
             for manager_name, manager_config in app_managers.items():
                 manager = manager_factory(manager_config['type'])(
-                    name=app_name, **manager_config['config']
+                    name=app_name, **manager_config
                 )
                 self.sources[app_name][manager_name] = manager
 
@@ -117,6 +117,17 @@ class APKSchleuder(object):
                     warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
 
         self._write_db(db_json)
+
+
+    def verify(self):
+        """Verify all APKs with info from managers that provide the same version."""
+        db_json = self._get_db()
+
+        for app_name, app_managers in self.sources.items():
+            print(' - Verifying app %s...' % app_name)
+            for manager in app_managers.values():
+                if manager.get_version() == db_json[app_name]['version']:
+                    manager.verify()
 
 
     def get_status(self):

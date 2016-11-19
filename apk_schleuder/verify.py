@@ -61,17 +61,8 @@ def _extract_certificate(file_name):
     return os.path.join(SETTINGS['temp_dir'], cert_file.filename)
 
 
-def verify_apk_sig_fpr(file_name, fprs):
-    """
-    Verify the APK signature.
-
-    fprs: a dict with
-          - keys: methods {'SHA256', 'SHA1', 'MD5'}
-          - their expected values (hexdigest)
-    """
-    if not any(fprs.values()):
-        raise ValueError('At least one fingerprint should be given.')
-
+def get_apk_sig_fpr(file_name):
+    """Return the APK signature fingerprints."""
     cert_file_name = _extract_certificate(file_name)
     result = run(
         [SETTINGS['keytool'], '-printcert', '-file', cert_file_name],
@@ -90,15 +81,10 @@ def verify_apk_sig_fpr(file_name, fprs):
         replace(' ', '').replace('\t', '').replace('\n', '').lower()
     matches = fpr_regexp.search(stdout_text)
 
-    for method, expected_fpr in fprs.items():
-        real_fpr = matches.group(method).replace(':', '')
-
-        if expected_fpr and expected_fpr.lower().replace(':', '') != real_fpr:
-            raise CryptoVerificationError(
-                file_name,
-                message='{0} fingerprint did not match. Expected {1} but was {2}'.
-                format(method, expected_fpr, real_fpr)
-            )
+    return {
+        m: matches.group(m).replace(':', '')
+        for m in ['SHA256', 'SHA1', 'MD5']
+    }
 
 
 def verify_apk_sig(apk_file_name):

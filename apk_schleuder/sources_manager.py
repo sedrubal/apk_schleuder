@@ -45,6 +45,10 @@ class BaseManager(object):
     def get_apk(self):
         """Generate the APK, verify it and return the path to APK file."""
 
+    @abc.abstractmethod
+    def verify(self):
+        """Verify the local APK file."""
+
     def clean(self):
         """Cleanup. Delete APK file (and other files - can be overwritten)."""
         os.remove(self.apk_path)
@@ -62,12 +66,12 @@ class DownloadBasedManager(BaseManager):
         self.apk_signature_fingerprints = {}
         for key, value in kwargs.items():
             if key == 'get_apk_checksums':
-                if all((x in hashlib.algorithms_available for x in value)):
+                if all((x[0] in hashlib.algorithms_available for x in value)):
                     self.get_apk_checksums = value
                 else:
                     warn(
                         'Unrecognized hashing algorithm in %s.' %
-                        ', '.join(value.keys())
+                        ', '.join((x[0] for x in value))
                     )
                     warn(
                         'Recognized hashing algorithms are %s.' %
@@ -75,12 +79,12 @@ class DownloadBasedManager(BaseManager):
                     )
 
             elif key == 'apk_signature_fingerprints':
-                if all((x in ['SHA256', 'SHA1', 'MD5'] for x in value)):
+                if all((x[0] in ['SHA256', 'SHA1', 'MD5'] for x in value)):
                     self.apk_signature_fingerprints = value
                 else:
                     warn(
                         'Unrecognized signature fingerprint type in %s.' %
-                        ', '.join(value.keys())
+                        ', '.join((x[0] for x in value))
                     )
                     warn(
                         'Recognized signature fingerprint types are %s' %
@@ -97,7 +101,7 @@ class DownloadBasedManager(BaseManager):
             raise ValueError('APK download URL not found.')
 
         utils.download(self.apk_path, self.apk_url)
-        self.verify_apk_file()
+        self.verify()
         return self.apk_path
 
     @abc.abstractmethod
@@ -120,22 +124,36 @@ class DownloadBasedManager(BaseManager):
         >>> _get_fpr(self.apk_signature_fingerprints['SHA256'])
         """
 
-    def verify_apk_file(self):
-        """Verify the downloaded APK file if checksums or fprs configured."""
-        # Verify checksum
-        for method, get_checksum in self.get_apk_checksums.items():
+    def verify_checksums(self):
+        """Verify all available checksums against downloaded file."""
+        checked_checksums = {}
+        for method, get_checksum in self.get_apk_checksums:
             try:
-                verify.verify_checksum(
-                    file_name=self.apk_path,
-                    chksum=self._get_checksum(get_checksum),
-                    method=method,
-                )
+                checksum = self._get_checksum(get_checksum)
+                if checked_checksums.get(method):
+                    if checksum != checked_checksums[method]:
+                        raise verify.ChecksumMissmatch(
+                            file_name=self.apk_path,
+                            method=method,
+                            checksum_expected=checksum,
+                            checksum_was=checked_checksums[method],
+                        )
+                    else:
+                        continue  # same chksum was already checked
+                else:
+                    verify.verify_checksum(
+                        file_name=self.apk_path,
+                        chksum=checksum,
+                        method=method,
+                    )
+                    checked_checksums[method] = checksum
             except verify.ChecksumMissmatch as err:
                 warn(str(err))
             else:
                 print('  - %s checksum matches' % method)
 
-        # Verify APK signature
+    def verify_apk_signature(self):
+        """Verify the APK vs. it's signature."""
         try:
             verify.verify_apk_sig(self.apk_path)
         except verify.CryptoVerificationError as err:
@@ -143,23 +161,34 @@ class DownloadBasedManager(BaseManager):
         else:
             print('  - APK signature is valid')
 
-        # Verify APK signature fingerprint
-        fprs = {}
-        for method in {'SHA256', 'SHA1', 'MD5'}:
-            fprs[method] = self._get_fpr(
-                self.apk_signature_fingerprints.get(method)
-            )
+    def verify_apk_signature_fprs(self):
+        """Verify the APK signature fprs vs. all available fprs."""
 
-        if any(fprs.values()):
-            try:
-                verify.verify_apk_sig_fpr(self.apk_path, fprs)
-            except verify.CryptoVerificationError as err:
-                warn(str(err))
-            else:
-                print('  - signature fingerprint(s) matches')
-        else:
+        if not self.apk_signature_fingerprints:
             print('  - No signature fingerprint was given')
+            return
 
+        real_fprs = verify.get_apk_sig_fpr(self.apk_path)
+        for method, get_fpr in self.apk_signature_fingerprints:
+            try:
+                fpr = self._get_fpr(get_fpr).lower().replace(':', '')
+                if real_fprs[method]:
+                    if fpr != real_fprs[method]:
+                        raise verify.CryptoVerificationError(
+                            file_name=self.apk_path,
+                            message='{0} fingerprint did not match. Expected {1} but was {2}'.
+                            format(method, fpr, real_fprs[method])
+                        )
+                    else:
+                        print('  - %s signature fingerprint matches' % method)
+            except verify.ChecksumMissmatch as err:
+                warn(str(err))
+
+    def verify(self):
+        """Verify the downloaded APK file if checksums or fprs configured."""
+        self.verify_checksums()
+        self.verify_apk_signature()
+        self.verify_apk_signature_fprs()
 
 
 class WebManager(DownloadBasedManager):
