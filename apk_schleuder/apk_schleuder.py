@@ -5,7 +5,7 @@
 import os
 import json
 from warnings import warn
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from .config import SETTINGS
 from .sources_manager import manager_factory
@@ -39,7 +39,7 @@ class APKSchleuder(object):
         for app_name, app_managers in self.sources.items():
             try:
                 app_version, manager_name = max((
-                    (StrictVersion(m.get_version()), mn)
+                    (LooseVersion(m.get_version()), mn)
                     for mn, m in app_managers.items()
                 ))
                 results[app_name] = {
@@ -62,9 +62,9 @@ class APKSchleuder(object):
 
         def _validate_version(cfg_app):
             try:
-                return StrictVersion(cfg_app.get('version', '0.0.0'))
+                return LooseVersion(cfg_app.get('version', '0.0.0'))
             except ValueError:
-                return StrictVersion('0.0.0')
+                return LooseVersion('0.0.0')
 
         def _validate_file(cfg_app):
             if not cfg_app.get('file') or not os.path.isfile(cfg_app['file']):
