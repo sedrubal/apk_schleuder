@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
+
 """Some utils."""
 
 from warnings import warn
 import requests
 
 
-def download(local_filename, url):
+def download(url, local_filename):
     """Download a file from url to local_filename."""
     resp = requests.get(url, stream=True)
+    if not resp.ok:
+        resp.raise_for_status()
+
     with open(local_filename, 'w+b') as local_file:
         for chunk in resp.iter_content(chunk_size=1024):
             if chunk:

@@ -103,7 +103,7 @@ class DownloadBasedManager(BaseManager):
         if not self.apk_url:
             raise ValueError('APK download URL not found.')
 
-        utils.download(self.apk_path, self.apk_url)
+        utils.download(url=self.apk_url, local_filename=self.apk_path)
         self.verify()
         return self.apk_path
 

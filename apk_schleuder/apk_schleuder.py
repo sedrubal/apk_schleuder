@@ -102,7 +102,7 @@ class APKSchleuder(object):
 
             local_version = db_json[app_name]['version']
             remote_version = latest_versions[app_name]['version']
-            if remote_version > local_version:
+            if remote_version > local_version or not db_json[app_name]['file']:
                 manager_name = latest_versions[app_name]['manager_name']
                 manager = self.sources[app_name][manager_name]
                 print(
