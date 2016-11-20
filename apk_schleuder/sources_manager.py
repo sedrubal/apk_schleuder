@@ -65,8 +65,8 @@ class DownloadBasedManager(BaseManager):
     def __init__(self, name, **kwargs):
         super(DownloadBasedManager, self).__init__(name)
         self._apk_url = None
-        self.get_apk_checksums = {}
-        self.apk_signature_fingerprints = {}
+        self.get_apk_checksums = []
+        self.apk_signature_fingerprints = []
         for key, value in kwargs.items():
             if key == 'get_apk_checksums':
                 if all((x[0] in hashlib.algorithms_available for x in value)):
@@ -174,7 +174,7 @@ class DownloadBasedManager(BaseManager):
         real_fprs = verify.get_apk_sig_fpr(self.apk_path)
         for method, get_fpr in self.apk_signature_fingerprints:
             try:
-                fpr = self._get_fpr(get_fpr).lower().replace(':', '')
+                fpr = self._get_fpr(get_fpr).lower().replace(':', '').strip()
                 if real_fprs[method]:
                     if fpr != real_fprs[method]:
                         raise verify.CryptoVerificationError(
@@ -221,7 +221,7 @@ class WebManager(DownloadBasedManager):
         return self._soup
 
     def get_version(self):
-        return self.get_apk_version(self.soup)
+        return utils.clean_version_string(self.get_apk_version(self.soup))
 
     @property
     def apk_url(self):
@@ -263,7 +263,7 @@ class GitHubManager(DownloadBasedManager):
         return self._api_json
 
     def get_version(self):
-        return self.api_json['tag_name'].lower().lstrip('v')
+        return utils.clean_version_string(self.api_json['tag_name'])
 
     @property
     def apk_url(self):
@@ -315,17 +315,17 @@ class ApkUpdateManager(WebManager):
     @staticmethod
     def apkupdate_get_md5_sum(soup):
         """Return the MD5 sum from apkupdate.com site."""
-        return soup(text=re.compile('File APK Md5:'))[0].next.text
+        return soup(text=re.compile('File APK Md5:'))[0].next.text.strip()
 
     @staticmethod
     def apkupdate_get_sha1_sum(soup):
         """Return the SHA1 sum from apkupdate.com site."""
-        return soup(text=re.compile('File APK Sha1:'))[0].next.text
+        return soup(text=re.compile('File APK Sha1:'))[0].next.text.strip()
 
     @staticmethod
     def apkupdate_get_apk_sig_fpr(soup):
         """Return the fpr of the apk sign. from apkupdate.com site."""
-        return soup(text=re.compile('APK Signature:'))[0].next.text
+        return soup(text=re.compile('APK Signature:'))[0].next.text.strip()
 
     @staticmethod
     def apkupdate_get_apk_url(soup):

@@ -27,3 +27,8 @@ def get_apk_href(soup):
     check_single_result(urls)
 
     return urls[0].attrs['href']
+
+
+def clean_version_string(version_str):
+    """Return a cleaned version string."""
+    return version_str.lower().lstrip('v').replace('-release', '')

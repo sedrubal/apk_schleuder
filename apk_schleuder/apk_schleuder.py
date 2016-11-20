@@ -67,7 +67,7 @@ class APKSchleuder(object):
                 return StrictVersion('0.0.0')
 
         def _validate_file(cfg_app):
-            if not os.path.isfile(cfg_app.get('file', '')):
+            if not cfg_app.get('file') or not os.path.isfile(cfg_app['file']):
                 return None
             else:
                 return cfg_app['file']
@@ -97,6 +97,9 @@ class APKSchleuder(object):
         latest_versions = self.get_latest_versions()
 
         for app_name in self.sources:
+            if app_name not in latest_versions:
+                continue  # update failed
+
             local_version = db_json[app_name]['version']
             remote_version = latest_versions[app_name]['version']
             if remote_version > local_version:
@@ -125,9 +128,12 @@ class APKSchleuder(object):
 
         for app_name, app_managers in self.sources.items():
             print(' - Verifying app %s...' % app_name)
-            for manager in app_managers.values():
-                if manager.get_version() == db_json[app_name]['version']:
-                    manager.verify()
+            try:
+                for manager in app_managers.values():
+                    if manager.get_version() == db_json[app_name]['version']:
+                        manager.verify()
+            except Exception as err:
+                warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
 
 
     def get_status(self):

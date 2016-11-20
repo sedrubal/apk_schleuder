@@ -18,8 +18,12 @@ def print_status(status):
     """Pretty prints the status output by APKSchleuder.get_status"""
     headers = ['name', 'local version', 'source', 'APK file']
     table_data = [
-        [name, data['version'], data['source'], data['file']]
-        for name, data in status.items()
+        [
+            name,
+            data.get('version', '-'),
+            data.get('source', '-'),
+            data.get('file', '-'),
+        ] for name, data in status.items()
     ]
     print(tabulate(table_data, headers=headers))
 
@@ -42,7 +46,7 @@ def main():
     print()
     print('Updating fdroid repo...')
     os.chdir(os.path.join(SETTINGS['repo_dir'], '..'))
-    subprocess.call(['fdroid', 'update'])
+    subprocess.call(['fdroid', 'update', '-c'])
 
 if __name__ == '__main__':
     main()
