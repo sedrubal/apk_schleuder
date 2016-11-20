@@ -265,8 +265,15 @@ class GitHubManager(DownloadBasedManager):
     def get_version(self):
         return utils.clean_version_string(self.api_json['tag_name'])
 
-    @property
-    def apk_url(self):
+    def verify(self):
+        super(GitHubManager, self).verify()
+        if self._latest_apk_asset()['size'] == os.path.getsize(self.apk_path):
+            print('  - File size matches GitHub API')
+        else:
+            warn('  - File size differs from value in GitHub API.')
+
+    def _latest_apk_asset(self):
+        """Return the asset from api_json that seems to be the desired apk."""
         def _check_asset_apk(asset):
             """Checks if an asset is a valid APK. Return True if it is."""
             return all({
@@ -275,10 +282,14 @@ class GitHubManager(DownloadBasedManager):
                 asset['state'] == 'uploaded',
             })
 
+        for asset in self.api_json['assets']:
+            if _check_asset_apk(asset):
+                return asset
+
+    @property
+    def apk_url(self):
         if not self._apk_url:
-            for asset in self.api_json['assets']:
-                if _check_asset_apk(asset):
-                    self._apk_url = asset['browser_download_url']
+            self._apk_url = self._latest_apk_asset()['browser_download_url']
 
         return self._apk_url
 
