@@ -24,6 +24,7 @@ def manager_factory(manager_type):
         'web': WebManager,
         'github': GitHubManager,
         'apkupdate': ApkUpdateManager,
+        'apkplz': ApkPlzManager,
     }[manager_type]
 
 
@@ -364,3 +365,32 @@ class ApkUpdateManager(WebManager):
         return list(
             soup.select('.apks .title span')[0].children
         )[1].strip().split(' ')[0]
+
+
+class ApkPlzManager(WebManager):
+    """Download APKs from apkplz.com."""
+    URL = 'https://apkplz.com/android-apps/{project}-apk-download'
+    APK_DOWNLOAD_URL = 'http://download.apkplz.com/apk/com/trello/{apk}'
+
+    def __init__(self, name, project, **kwargs):
+        """project=name of app in apkplz url (without -apk-download)."""
+        super(ApkPlzManager, self).__init__(
+            name=name,
+            url=ApkPlzManager.URL.format(project=project),
+            get_apk_url=self.apkplz_get_apk_url,
+            get_apk_version=ApkPlzManager.apkplz_get_apk_version,
+            **kwargs)
+        self.project = project
+
+    def apkplz_get_apk_url(self, soup):
+        """Return the download url for the APK on apkplz.com."""
+        dl_version = self.get_version().replace('.', '-')
+        dl_apk_name = '{project}-{dl_version}-apkplz.com.apk'.format(
+            project=self.project, dl_version=dl_version,
+        )
+        return ApkPlzManager.APK_DOWNLOAD_URL.format(apk=dl_apk_name)
+
+    @staticmethod
+    def apkplz_get_apk_version(soup):
+        """Return the version of the latest APK on apkplz.com."""
+        return soup.select('span[itemprop=softwareVersion]')[0].text
