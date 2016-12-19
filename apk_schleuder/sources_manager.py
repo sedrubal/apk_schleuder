@@ -370,7 +370,7 @@ class ApkUpdateManager(WebManager):
 class ApkPlzManager(WebManager):
     """Download APKs from apkplz.com."""
     URL = 'https://apkplz.com/android-apps/{project}-apk-download'
-    APK_DOWNLOAD_URL = 'http://download.apkplz.com/apk/com/trello/{apk}'
+    APK_DOWNLOAD_URL = 'https://download.apkplz.com/apk/{apk}'
 
     def __init__(self, name, project, **kwargs):
         """project=name of app in apkplz url (without -apk-download)."""
@@ -385,7 +385,12 @@ class ApkPlzManager(WebManager):
     def apkplz_get_apk_url(self, soup):
         """Return the download url for the APK on apkplz.com."""
         dl_version = self.get_version().replace('.', '-')
-        dl_apk_name = '{project}-{dl_version}-apkplz.com.apk'.format(
+        domain = re.match(
+            r'^.*\((?P<domain>[\w\.]+)\).*$',
+            soup.select('title')[0].text,
+        ).group('domain')
+        dl_apk_name = '{domain}/{project}-{dl_version}-apkplz.com.apk'.format(
+            domain=domain.replace('.', '/'),
             project=self.project, dl_version=dl_version,
         )
         return ApkPlzManager.APK_DOWNLOAD_URL.format(apk=dl_apk_name)

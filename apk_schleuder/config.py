@@ -165,7 +165,17 @@ SOURCES = {
                 ('SHA1', '45:98:9D:C9:AD:87:28:C2:AA:9A:82:FA:55:50:3E:34:A8:87:93:74'),
                 ('MD5', 'D9:0D:B3:64:E3:2F:A3:A7:BD:A4:C2:90:FB:65:E3:10'),
             ],
-        }
+        },
+        'apkplz': {
+            'type': 'apkplz',
+            'project': 'signal-private-messenger',
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'29:F3:4E:5F:27:F2:11:B4:24:BC:5B:F9:D6:71:62:C0:EA:FB:A2:DA:35:AF:35:C1:64:16:FC:44:62:76:BA:26'),
+                ('SHA1', '45:98:9D:C9:AD:87:28:C2:AA:9A:82:FA:55:50:3E:34:A8:87:93:74'),
+                ('MD5', 'D9:0D:B3:64:E3:2F:A3:A7:BD:A4:C2:90:FB:65:E3:10'),
+            ],
+        },
     },
     'wpsoffice': {
         'apkupdate': {
@@ -178,11 +188,31 @@ SOURCES = {
                 ('MD5', ' 55:2E:BA:E6:B4:7E:AC:E3:02:58:64:9A:DB:82:87:B6'),
             ],
         },
+        'apkplz': {
+            'type': 'apkplz',
+            'project': 'wps-office-pdf',
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'64:39:90:87:8D:3C:A8:39:52:A5:BE:5F:3E:58:D9:F8:BB:6C:DC:57:BF:0F:22:87:00:21:20:71:C6:8D:B3:D7'),
+                ('SHA1', '72:66:E5:A0:58:B0:8D:4C:67:21:4E:68:1A:46:3E:AB:E4:03:4A:32'),
+                ('MD5', ' 55:2E:BA:E6:B4:7E:AC:E3:02:58:64:9A:DB:82:87:B6'),
+            ],
+        },
     },
     'soundcloud': {
         'apkupdate': {
             'type': 'apkupdate',
             'project': 'com.soundcloud.android/soundcloud-music-amp-audio',
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'AF:F9:30:D6:71:FA:0A:57:B8:C4:1D:16:78:CC:2A:8E:A7:17:07:5A:74:E3:46:94:2A:14:0A:FA:44:13:39:D2'),
+                ('SHA1', '13:C9:E5:90:0D:43:70:89:B7:23:24:B0:26:0F:3B:5A:0B:4E:02:7B'),
+                ('MD5', '9B:4C:70:12:B9:AD:F3:D9:A3:34:54:56:07:51:84:3A'),
+            ],
+        },
+        'apkplz': {
+            'type': 'apkplz',
+            'project': 'soundcloud-music-amp-audio',
             'apk_signature_fingerprints': [
                 ('SHA256', \
 'AF:F9:30:D6:71:FA:0A:57:B8:C4:1D:16:78:CC:2A:8E:A7:17:07:5A:74:E3:46:94:2A:14:0A:FA:44:13:39:D2'),
