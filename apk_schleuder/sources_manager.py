@@ -306,7 +306,7 @@ class GitHubManager(DownloadBasedManager):
 class ApkUpdateManager(WebManager):
     """Download APKs from apkupdate.com."""
     URL = 'https://apkupdate.com/apk/{project}'
-    APK_DOWNLOAD_URL = 'http://file.apkupdate.com/dl/' + \
+    APK_DOWNLOAD_URL = 'http://file2.apkupdate.com/dl/' + \
         '{rnd}/download/{year}/{month:02}/{apk_id}-{build_id}.apk'
 
     def __init__(self, name, project, **kwargs):

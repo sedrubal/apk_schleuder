@@ -106,16 +106,6 @@ SOURCES = {
                 ('MD5', '55:6C:60:19:24:9B:BC:0C:AB:70:49:51:78:D3:A9:D1'),
             ],
         },
-        'apkupdate': {
-            'type': 'apkupdate',
-            'project': 'com.whatsapp/whatsapp-messenger',
-            'apk_signature_fingerprints': [
-                ('SHA256', \
-'39:87:D0:43:D1:0A:EF:AF:5A:87:10:B3:67:14:18:FE:57:E0:E1:9B:65:3C:9D:F8:25:58:FE:B5:FF:CE:5D:44'),
-                ('SHA1', '38:A0:F7:D5:05:FE:18:FE:C6:4F:BF:34:3E:CA:AA:F3:10:DB:D7:99'),
-                ('MD5', '55:6C:60:19:24:9B:BC:0C:AB:70:49:51:78:D3:A9:D1'),
-            ],
-        },
     },
     'firefox': {
         'mozilla.org': {
@@ -218,6 +208,28 @@ SOURCES = {
 'AF:F9:30:D6:71:FA:0A:57:B8:C4:1D:16:78:CC:2A:8E:A7:17:07:5A:74:E3:46:94:2A:14:0A:FA:44:13:39:D2'),
                 ('SHA1', '13:C9:E5:90:0D:43:70:89:B7:23:24:B0:26:0F:3B:5A:0B:4E:02:7B'),
                 ('MD5', '9B:4C:70:12:B9:AD:F3:D9:A3:34:54:56:07:51:84:3A'),
+            ],
+        },
+    },
+    'mixcloud': {
+        'apkupdate': {
+            'type': 'apkupdate',
+            'project': 'com.mixcloud.player/mixcloud-radio-amp-dj-mixes',
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'7B:8C:56:B9:6F:DB:AB:10:A7:D8:C7:2A:35:0F:54:3D:D1:2F:31:2D:E4:01:95:F8:B4:7E:79:29:8E:23:62:D2'),
+                ('SHA1', '21:A2:EA:80:FF:C2:C6:EE:50:6A:3E:04:E6:3D:FD:94:6E:CB:AC:5E'),
+                ('MD5',  'CE:0C:6B:73:4F:FB:D7:18:B2:6B:4A:B2:8A:7B:E1:1B'),
+            ],
+        },
+        'apkplz': {
+            'type': 'apkplz',
+            'project': 'mixcloud-radio-amp-dj-mixes',
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'7B:8C:56:B9:6F:DB:AB:10:A7:D8:C7:2A:35:0F:54:3D:D1:2F:31:2D:E4:01:95:F8:B4:7E:79:29:8E:23:62:D2'),
+                ('SHA1', '21:A2:EA:80:FF:C2:C6:EE:50:6A:3E:04:E6:3D:FD:94:6E:CB:AC:5E'),
+                ('MD5',  'CE:0C:6B:73:4F:FB:D7:18:B2:6B:4A:B2:8A:7B:E1:1B'),
             ],
         },
     },
