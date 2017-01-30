@@ -39,7 +39,7 @@ class APKSchleuder(object):
         for app_name, app_managers in self.sources.items():
             try:
                 app_version, manager_name = max((
-                    (LooseVersion(m.get_version()), mn)
+                    (LooseVersion(m.version), mn)
                     for mn, m in app_managers.items()
                 ))
                 results[app_name] = {
@@ -130,7 +130,7 @@ class APKSchleuder(object):
             print(' - Verifying app %s...' % app_name)
             try:
                 for manager in app_managers.values():
-                    if manager.get_version() == db_json[app_name]['version']:
+                    if manager.version == db_json[app_name]['version']:
                         manager.verify()
             except Exception as err:
                 warn('{0}: {1}'.format(err.__class__.__name__, str(err)))

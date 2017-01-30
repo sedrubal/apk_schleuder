@@ -53,11 +53,6 @@ def get_whatsapp_version(soup):
     return versions[0].text.strip().lower().split(' ')[1]
 
 
-def get_firefox_apk_url(_):
-    """Return the static download url to firefox APK."""
-    return 'https://download.mozilla.org/?product=fennec-latest&os=android&lang=en-US'
-
-
 def get_firefox_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
     return soup.select('html')[0].attrs['data-latest-firefox'].strip().lower()
@@ -111,7 +106,7 @@ SOURCES = {
         'mozilla.org': {
             'type': 'web',
             'url': 'https://www.mozilla.org/en-US/firefox/android/all/',
-            'get_apk_url': get_firefox_apk_url,
+            'get_apk_url': 'https://download.mozilla.org/?product=fennec-latest&os=android&lang=en-US',
             'get_apk_version': get_firefox_version,
             'apk_signature_fingerprints': [
                 ('SHA256', \

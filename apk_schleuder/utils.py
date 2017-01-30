@@ -26,7 +26,7 @@ def check_single_result(results):
         warn('Expected to find one result for selector, but found none.')
 
 
-def get_apk_href(soup):
+def get_apk_href(soup, _):
     """Return the href value of the first .apk href link in soup."""
     urls = soup.select('a[href$=.apk]')
     check_single_result(urls)

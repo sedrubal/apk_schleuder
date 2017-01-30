@@ -35,6 +35,7 @@ class BaseManager(object):
 
     def __init__(self, name):
         self.name = name
+        self._version = None
 
     @property
     def apk_path(self):
@@ -42,8 +43,20 @@ class BaseManager(object):
         return os.path.join(SETTINGS['repo_dir'], '%s.apk' % self.name)
 
     @abc.abstractmethod
-    def get_version(self):
+    def _get_version(self):
+        """
+        Return a version string of the latest APK version.
+
+        Will be called by self._version property.
+        """
+
+    @property
+    def version(self):
         """Return a version string of the latest APK version."""
+        if not self._version:
+            self._version = self._get_version()
+
+        return self._version
 
     @abc.abstractmethod
     def get_apk(self):
@@ -221,13 +234,16 @@ class WebManager(DownloadBasedManager):
 
         return self._soup
 
-    def get_version(self):
+    def _get_version(self):
         return utils.clean_version_string(self.get_apk_version(self.soup))
 
     @property
     def apk_url(self):
         if not self._apk_url:
-            self._apk_url = self.get_apk_url(self.soup)
+            self._apk_url = (
+                self.get_apk_url if isinstance(self.get_apk_url, str)
+                else self.get_apk_url(self.soup, self.version)
+            )
 
         return self._apk_url
 
@@ -263,7 +279,7 @@ class GitHubManager(DownloadBasedManager):
 
         return self._api_json
 
-    def get_version(self):
+    def _get_version(self):
         return utils.clean_version_string(self.api_json['tag_name'])
 
     def verify(self):
@@ -340,7 +356,7 @@ class ApkUpdateManager(WebManager):
         return soup(text=re.compile('APK Signature:'))[0].next.text.strip()
 
     @staticmethod
-    def apkupdate_get_apk_url(soup):
+    def apkupdate_get_apk_url(soup, _):
         """Return the download url for the APK on apkupdate.com site."""
         build_id = list(
             soup.select('.apks .title span')[0].children
@@ -382,9 +398,9 @@ class ApkPlzManager(WebManager):
             **kwargs)
         self.project = project
 
-    def apkplz_get_apk_url(self, soup):
+    def apkplz_get_apk_url(self, soup, version):
         """Return the download url for the APK on apkplz.com."""
-        dl_version = self.get_version().replace('.', '-')
+        dl_version = version.replace('.', '-')
         domain = re.match(
             r'^.*\((?P<domain>[\w\.]+)\).*$',
             soup.select('title')[0].text,
