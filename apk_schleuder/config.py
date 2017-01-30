@@ -58,6 +58,17 @@ def get_firefox_version(soup):
     return soup.select('html')[0].attrs['data-latest-firefox'].strip().lower()
 
 
+def get_vlc_url(_, version):
+    """Return the download url for the latest vlc apk."""
+    return 'https://get.videolan.org/vlc-android/{ver}/VLC-Android-{ver}-ARMv7.apk'.format(
+        ver=str(version),
+    )
+
+
+def get_vlc_version(soup):
+    """Return the latest version for vlc."""
+    return soup.select('a')[-1].text.strip('/')
+
 
 SOURCES = {
     'wire': {
@@ -247,6 +258,20 @@ SOURCES = {
 '5B:77:11:55:16:5A:20:F5:61:92:F0:A4:57:36:4F:18:A9:ED:F9:AC:55:30:DA:A3:3A:0B:C3:7F:63:0E:82:39'),
                 ('SHA1', 'B2:F6:D2:21:9C:12:EF:B0:1B:76:E8:7F:87:A9:B9:42:86:BA:2C:C9'),
                 ('MD5', '19:13:11:71:69:43:D0:3F:A3:85:57:B0:B9:1F:73:EC'),
+            ],
+        },
+    },
+    'vlc': {
+        'get.videolan.org': {
+            'type': 'web',
+            'url': 'https://get.videolan.org/vlc-android/',
+            'get_apk_url': get_vlc_url,
+            'get_apk_version': get_vlc_version,
+            'apk_signature_fingerprints': [
+                ('SHA256',\
+'C8:76:8D:2C:EA:0C:4B:62:2E:41:9B:4B:47:15:98:19:46:82:1E:4E:BC:03:5F:B4:17:76:CA:D3:95:A7:F6:8E'),
+                ('SHA1', 'EE:FB:C9:81:42:83:43:BB:DD:FF:F6:B2:3B:6B:D8:71:73:51:41:0C'),
+                ('MD5', '51:1F:EA:1A:22:A7:B6:2E:BC:01:95:0C:16:7C:04:06'),
             ],
         },
     },
