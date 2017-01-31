@@ -2,9 +2,11 @@
 
 Download apks from shady sources and put them into a f-droid repo.
 
-## Adding new APKs
+## Config
 
-### update `config.py`
+Create a config under `config.py`. You can also create a symlink to `config_example.py`.
+
+### Add new APKs
 
 - find a source to download the APK (e.g. apkupdate.com, apkplz.com, github.com, a website, ...)
 - create a new entry in `config.py`:

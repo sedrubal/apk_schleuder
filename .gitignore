@@ -15,3 +15,6 @@
 
 # generated fdroid repo
 /fdroid/
+
+# config
+**/config.py
