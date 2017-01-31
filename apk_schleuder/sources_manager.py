@@ -386,7 +386,7 @@ class ApkUpdateManager(WebManager):
 class ApkPlzManager(WebManager):
     """Download APKs from apkplz.com."""
     URL = 'https://apkplz.com/android-apps/{project}-apk-download'
-    APK_DOWNLOAD_URL = 'https://download.apkplz.com/apk/{apk}'
+    APK_DOWNLOAD_URL = 'https://download.apkplz.com/apk/{domain}/{apk_name}-apkplz.com.apk'
 
     def __init__(self, name, project, **kwargs):
         """project=name of app in apkplz url (without -apk-download)."""
@@ -400,16 +400,16 @@ class ApkPlzManager(WebManager):
 
     def apkplz_get_apk_url(self, soup, version):
         """Return the download url for the APK on apkplz.com."""
-        dl_version = version.replace('.', '-')
+        apk_name=soup.select('#download_form')[0]. \
+            attrs['action'].split('/')[-1]
         domain = re.match(
             r'^.*\((?P<domain>[\w\.]+)\).*$',
             soup.select('title')[0].text,
         ).group('domain')
-        dl_apk_name = '{domain}/{project}-{dl_version}-apkplz.com.apk'.format(
+        return ApkPlzManager.APK_DOWNLOAD_URL.format(
             domain=domain.replace('.', '/'),
-            project=self.project, dl_version=dl_version,
+            apk_name=apk_name,
         )
-        return ApkPlzManager.APK_DOWNLOAD_URL.format(apk=dl_apk_name)
 
     @staticmethod
     def apkplz_get_apk_version(soup):
