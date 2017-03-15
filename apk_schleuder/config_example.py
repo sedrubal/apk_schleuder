@@ -13,8 +13,8 @@ from .utils import get_apk_href, get_single_result
 
 def get_wire_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
-    version = get_single_result(soup.select('.info'))
-    text = version.attrs['title'].strip().lower()
+    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
+    text = info.attrs['title'].strip().lower()
     return re.search(
         r'^version: (?P<version>(\d+\.)+\d+) ', text
     ).group('version')
@@ -22,8 +22,8 @@ def get_wire_version(soup):
 
 def get_wire_sha256sum(soup, version):
     """Return the sha256sum specified on download homepage."""
-    version = get_single_result(soup.select('.info'))
-    text = version.attrs['title']. \
+    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
+    text = info.attrs['title']. \
         lower().replace(' ', '').replace('\n', '').replace('<br>', '')
     return re.search(
         r'.*filechecksum\(sha256\):(?P<checksum>[0-9a-f]{64}).*',
@@ -32,8 +32,8 @@ def get_wire_sha256sum(soup, version):
 
 def get_wire_signature_sha256(soup, version):
     """Return the sha256 fpr of the APK signature given on the homepage."""
-    version = get_single_result(soup.select('.info'))
-    text = version.attrs['title']. \
+    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
+    text = info.attrs['title']. \
         lower().replace(' ', '').replace('\n', '').replace('<br>', '')
     return re.search(
         r'.*certificatefingerprint\(sha256\):(?P<checksum>[0-9a-f]{64}).*',
