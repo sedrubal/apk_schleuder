@@ -2,6 +2,8 @@
 
 Download apks from shady sources and put them into a f-droid repo.
 
+[![Code Health](https://landscape.io/github/sedrubal/apk_schleuder/master/landscape.svg?style=flat)](https://landscape.io/github/sedrubal/apk_schleuder/master)
+
 ## Config
 
 Create a config under `config.py`. You can also create a symlink to `config_example.py`.

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """Download latest APKs without Google Play TM."""
 
 from __future__ import print_function
@@ -15,7 +14,7 @@ from .apk_schleuder import APKSchleuder
 
 
 def print_status(status):
-    """Pretty prints the status output by APKSchleuder.get_status"""
+    """Pretty prints the status output by APKSchleuder.get_status."""
     headers = ['name', 'local version', 'source', 'APK file']
     table_data = [
         [
@@ -47,6 +46,7 @@ def main():
     print('Updating fdroid repo...')
     os.chdir(os.path.join(SETTINGS['repo_dir'], '..'))
     subprocess.call(['fdroid', 'update', '-c'])
+
 
 if __name__ == '__main__':
     main()

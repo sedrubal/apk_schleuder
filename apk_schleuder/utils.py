@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """Some utils."""
 
 import logging
@@ -19,6 +18,7 @@ def download(url, local_filename):
             if chunk:
                 local_file.write(chunk)
 
+
 def get_single_result(results):
     """Return first element of a list. Print a warning if len(result) > 1."""
     if len(results) > 1:
@@ -30,18 +30,22 @@ def get_single_result(results):
 
     return results[0]
 
+
 def get_apk_href(soup, **_):
     """Return the href value of the first .apk href link in soup."""
     urls = soup.select('a[href$=.apk]')
     return get_single_result(urls).attrs['href']
 
+
 def clean_version_string(version_str):
     """Return a cleaned version string."""
     return version_str.lower().lstrip('v').replace('-release', '')
 
+
 def clean_hexdigitstr(fingerprint):
     """Return a cleaned fingerprint or checksum string."""
     return ''.join((c.lower() for c in fingerprint if c in string.hexdigits))
+
 
 def get_str_or_return_val(arg, **kwargs):
     """Return arg(**kwargs) if arg is a function, else arg."""

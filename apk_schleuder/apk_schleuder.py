@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-"""Main module"""
+"""Main APKSchleuder module."""
 
 import json
 import logging
@@ -15,7 +14,7 @@ from .sources_manager import manager_factory
 
 
 class APKSchleuder(object):
-    """Core of APK Schleuder"""
+    """Core of APK Schleuder."""
 
     def __init__(self, config_sources):
         """Read config and create sources."""
@@ -56,13 +55,15 @@ class APKSchleuder(object):
         for manager_name, manager in app_managers.items():
             try:
                 manager_version = LooseVersion(manager.version)
-                manager_version.parse  # test if version is ok
-                version_manager_tuples.append(VersionManagerTuple(
-                    version=manager_version,
-                    priority=manager.priority,
-                    manager_name=manager_name,
-                ))
-            except Exception as exc:
+                manager_version.parse  # NOQA: test if version is ok
+                version_manager_tuples.append(
+                    VersionManagerTuple(
+                        version=manager_version,
+                        priority=manager.priority,
+                        manager_name=manager_name,
+                    )
+                )
+            except Exception as exc:  # NOQA
                 logging.warning(
                     'Ignoring manager %r for app %r due to error:',
                     manager_name, app_name
@@ -132,10 +133,14 @@ class APKSchleuder(object):
 
                 manager = self.sources[app_name][manager_name]
                 print(
-                    'Updating', app_name,
-                    'from', local_version,
-                    'to', remote_version,
-                    'using', manager_name,
+                    'Updating',
+                    app_name,
+                    'from',
+                    local_version,
+                    'to',
+                    remote_version,
+                    'using',
+                    manager_name,
                 )
                 try:
                     manager.get_apk()
@@ -143,7 +148,7 @@ class APKSchleuder(object):
                     db_json[app_name]['source'] = manager_name
                     db_json[app_name]['file'] = manager.apk_path
                     break  # update successful
-                except Exception as exc:
+                except Exception as exc:  # NOQA
                     logging.warning('%r: %r', exc.__class__.__name__, str(exc))
                     continue  # try next manager
 
@@ -159,7 +164,7 @@ class APKSchleuder(object):
                 for manager in app_managers.values():
                     if manager.version == db_json[app_name]['version']:
                         manager.verify()
-            except Exception as exc:
+            except Exception as exc:  # NOQA
                 logging.error(
                     'Integrity of app %r could not be verified. Removing app.',
                     app_name
@@ -167,7 +172,7 @@ class APKSchleuder(object):
                 logging.error('%r: %r', exc.__class__.__name__, str(exc))
                 try:
                     os.remove(db_json[app_name]['file'])
-                except Exception as exc:
+                except Exception as exc:  # NOQA
                     logging.error(
                         'Could not remove file %r.', db_json[app_name]['file']
                     )

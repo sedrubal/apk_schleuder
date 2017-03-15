@@ -1,0 +1,16 @@
+---
+
+strictness: veryhigh
+doc-warnings: true
+
+pep8:
+  options:
+    max-line-length: 79
+
+pep257:
+  disable:
+    - D203  # conflicting rule
+    - D105  # missing docstring in magic methods, like __str__
+
+python-targets:
+  - 3

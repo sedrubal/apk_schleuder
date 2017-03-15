@@ -11,6 +11,7 @@ from .config import SETTINGS
 
 class CryptoVerificationError(ValueError):
     """Exception for failed verifications."""
+
     def __init__(self, file_name, message=''):
         msg = 'Verification for %s failed.' % file_name
         if message:
@@ -19,15 +20,17 @@ class CryptoVerificationError(ValueError):
         self.file_name = file_name
 
 
-
 class ChecksumMissmatch(CryptoVerificationError):
     """Exception on checksum missmatche."""
+
     def __init__(self, file_name, method, checksum_expected, checksum_was):
         super(ChecksumMissmatch, self).__init__(
             file_name=file_name,
             message='{0} checksum did not match. Expected {1} but was {2}'.
             format(
-                method, checksum_expected, checksum_was,
+                method,
+                checksum_expected,
+                checksum_was,
             )
         )
 
@@ -89,5 +92,7 @@ def get_apk_sig_fpr(file_name):
 
 def verify_apk_sig(apk_file_name):
     """Verify the APK signature."""
-    if call([SETTINGS['jarsigner'], '-verify', apk_file_name], stdout=DEVNULL) != 0:
+    if call(
+        [SETTINGS['jarsigner'], '-verify', apk_file_name], stdout=DEVNULL
+    ) != 0:
         raise CryptoVerificationError(apk_file_name)
