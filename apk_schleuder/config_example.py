@@ -2,72 +2,72 @@
 
 """Config sources."""
 
-import re
 import os
+import re
 import tempfile
 
-from .utils import check_single_result, get_apk_href
+import requests
+
+from .utils import get_apk_href, get_single_result
+
 
 def get_wire_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
-    versions = soup.select('.info')
-    check_single_result(versions)
-
-    text = versions[0].attrs['title'].strip().lower()
+    version = get_single_result(soup.select('.info'))
+    text = version.attrs['title'].strip().lower()
     return re.search(
         r'^version: (?P<version>(\d+\.)+\d+) ', text
     ).group('version')
 
 
-def get_wire_sha256sum(soup):
+def get_wire_sha256sum(soup, version):
     """Return the sha256sum specified on download homepage."""
-    versions = soup.select('.info')
-    check_single_result(versions)
-
-    text = versions[0].attrs['title']. \
+    version = get_single_result(soup.select('.info'))
+    text = version.attrs['title']. \
         lower().replace(' ', '').replace('\n', '').replace('<br>', '')
     return re.search(
         r'.*filechecksum\(sha256\):(?P<checksum>[0-9a-f]{64}).*',
         text
     ).group('checksum')
 
-
-def get_wire_signature_sha256(soup):
+def get_wire_signature_sha256(soup, version):
     """Return the sha256 fpr of the APK signature given on the homepage."""
-    versions = soup.select('.info')
-    check_single_result(versions)
-
-    text = versions[0].attrs['title']. \
+    version = get_single_result(soup.select('.info'))
+    text = version.attrs['title']. \
         lower().replace(' ', '').replace('\n', '').replace('<br>', '')
     return re.search(
         r'.*certificatefingerprint\(sha256\):(?P<checksum>[0-9a-f]{64}).*',
         text
     ).group('checksum')
 
-
 def get_whatsapp_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
-    versions = soup.select('.version')
-    check_single_result(versions)
-
-    return versions[0].text.strip().lower().split(' ')[1]
-
+    version = get_single_result(soup.select('.version'))
+    return version.text.strip().lower().split(' ')[1]
 
 def get_firefox_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
     return soup.select('html')[0].attrs['data-latest-firefox'].strip().lower()
 
-
-def get_vlc_url(_, version):
-    """Return the download url for the latest vlc apk."""
-    return 'https://get.videolan.org/vlc-android/{ver}/VLC-Android-{ver}-ARMv7.apk'.format(
-        ver=str(version),
-    )
-
-
 def get_vlc_version(soup):
     """Return the latest version for vlc."""
     return soup.select('a')[-1].text.strip('/')
+
+def get_signal_version(soup):
+    """Return the version of the latest release for signal."""
+    resp = requests.get('https://updates.signal.org/android/latest.json')
+    resp.raise_for_status()
+    return resp.json()['versionName']
+
+def get_signal_sha256sum(soup, version):
+    """Return the sha256 sum of the APK file given on the homepage."""
+    resp = requests.get('https://updates.signal.org/android/latest.json')
+    resp.raise_for_status()
+    return resp.json()['sha256sum']
+
+def get_signal_signature_sha256(soup, version):
+    """Return the sha256 fpr of the APK signature given on the homepage."""
+    return get_single_result(soup.select('.fingerprint')).text
 
 
 SOURCES = {
@@ -75,9 +75,9 @@ SOURCES = {
         'wire.com': {
             'type': 'web',
             'url': 'https://wire.com/download/',
-            'get_apk_url': get_apk_href,
-            'get_apk_version': get_wire_version,
-            'get_apk_checksums': [
+            'apk_url': get_apk_href,
+            'apk_version': get_wire_version,
+            'apk_checksums': [
                 ('SHA256', get_wire_sha256sum),
             ],
             'apk_signature_fingerprints': [
@@ -103,8 +103,8 @@ SOURCES = {
         'whatsapp.com': {
             'type': 'web',
             'url': 'https://www.whatsapp.com/android/',
-            'get_apk_url': get_apk_href,
-            'get_apk_version': get_whatsapp_version,
+            'apk_url': get_apk_href,
+            'apk_version': get_whatsapp_version,
             'apk_signature_fingerprints': [
                 ('SHA256', \
 '39:87:D0:43:D1:0A:EF:AF:5A:87:10:B3:67:14:18:FE:57:E0:E1:9B:65:3C:9D:F8:25:58:FE:B5:FF:CE:5D:44'),
@@ -117,8 +117,8 @@ SOURCES = {
         'mozilla.org': {
             'type': 'web',
             'url': 'https://www.mozilla.org/en-US/firefox/android/all/',
-            'get_apk_url': 'https://download.mozilla.org/?product=fennec-latest&os=android&lang=en-US',
-            'get_apk_version': get_firefox_version,
+            'apk_url': 'https://download.mozilla.org/?product=fennec-latest&os=android&lang=en-US',
+            'apk_version': get_firefox_version,
             'apk_signature_fingerprints': [
                 ('SHA256', \
 'A7:8B:62:A5:16:5B:44:94:B2:FE:AD:9E:76:A2:80:D2:2D:93:7F:EE:62:51:AE:CE:59:94:46:B2:EA:31:9B:04'),
@@ -152,6 +152,22 @@ SOURCES = {
         },
     },
     'signal': {
+        'signal.org': {
+            'type': 'web',
+            'url': 'https://signal.org/android/apk/',
+            'apk_url': 'https://updates.signal.org/android/Signal-website-release-{version}.apk',
+            'apk_version': get_signal_version,
+            'apk_checksums': [
+                ('SHA256', get_signal_sha256sum),
+            ],
+            'apk_signature_fingerprints': [
+                ('SHA256', \
+'29:F3:4E:5F:27:F2:11:B4:24:BC:5B:F9:D6:71:62:C0:EA:FB:A2:DA:35:AF:35:C1:64:16:FC:44:62:76:BA:26'),
+                ('SHA256', get_signal_signature_sha256),
+                ('SHA1', '45:98:9D:C9:AD:87:28:C2:AA:9A:82:FA:55:50:3E:34:A8:87:93:74'),
+                ('MD5', 'D9:0D:B3:64:E3:2F:A3:A7:BD:A4:C2:90:FB:65:E3:10'),
+            ],
+        },
         'apkupdate': {
             'type': 'apkupdate',
             'project': 'org.thoughtcrime.securesms/signal-private-messenger',
@@ -265,8 +281,8 @@ SOURCES = {
         'get.videolan.org': {
             'type': 'web',
             'url': 'https://get.videolan.org/vlc-android/',
-            'get_apk_url': get_vlc_url,
-            'get_apk_version': get_vlc_version,
+            'apk_url': 'https://get.videolan.org/vlc-android/{version}/VLC-Android-{version}-ARMv7.apk',
+            'apk_version': get_vlc_version,
             'apk_signature_fingerprints': [
                 ('SHA256',\
 'C8:76:8D:2C:EA:0C:4B:62:2E:41:9B:4B:47:15:98:19:46:82:1E:4E:BC:03:5F:B4:17:76:CA:D3:95:A7:F6:8E'),

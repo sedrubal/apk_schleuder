@@ -2,9 +2,10 @@
 
 """Main module"""
 
-import os
 import json
-from warnings import warn
+import logging
+import os
+from collections import namedtuple
 from distutils.version import LooseVersion
 
 from .config import SETTINGS
@@ -20,36 +21,52 @@ class APKSchleuder(object):
         for app_name, app_managers in config_sources.items():
             self.sources[app_name] = {}
             for manager_name, manager_config in app_managers.items():
-                manager = manager_factory(manager_config['type'])(
-                    name=app_name, **manager_config
-                )
+                try:
+                    manager = manager_factory(manager_config['type'])(
+                        name=app_name, **manager_config
+                    )
+                except TypeError as exc:
+                    print(
+                        '[!] Invalid Config for manager {0} for app {1}:'
+                        .format(manager_name, app_name)
+                    )
+                    print(exc)
+                    exit(1)
+
                 self.sources[app_name][manager_name] = manager
 
-    def get_latest_versions(self):
+    @staticmethod
+    def sort_managers_by_version(app_managers, app_name):
         """
-        Return a dict containing the latest versions of apps like this:
+        Return a list of managers sorted by their latest version like this:
 
         >>> get_latest_version()
-        {
-            'appname1': {'version': '0.1.2', 'manager_name': 'manager1_name'},
-            'appname2': {'version': '1.33.7', 'manager_name': 'manager2_name'},
-        }
+        [
+            ('1.33.7', 'manager_name1'),
+            ('1.33.7', 'manager_name2'),
+            ('1.33.6', 'manager_name3'),
+        ]
         """
-        results = {}
-        for app_name, app_managers in self.sources.items():
+        VersionManagerTuple = namedtuple(
+            'VersionManagerTuple', ['version', 'manager_name']
+        )
+        version_manager_tuples = []
+        for manager_name, manager in app_managers.items():
             try:
-                app_version, manager_name = max((
-                    (LooseVersion(m.version), mn)
-                    for mn, m in app_managers.items()
+                manager_version = LooseVersion(manager.version)
+                manager_version.parse  # test if version is ok
+                version_manager_tuples.append(VersionManagerTuple(
+                    version=manager_version,
+                    manager_name=manager_name,
                 ))
-                results[app_name] = {
-                    'version': app_version,
-                    'manager_name': manager_name,
-                }
-            except Exception as err:
-                warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
+            except Exception as exc:
+                logging.warning(
+                    'Ignoring manager %r for app %r due to error:',
+                    manager_name, app_name
+                )
+                logging.warning('%s: %s', exc.__class__.__name__, str(exc))
 
-        return results
+        return sorted(version_manager_tuples, reverse=True)
 
     def _get_db(self):
         """Open, read and update the db json."""
@@ -94,16 +111,18 @@ class APKSchleuder(object):
         """Update local APKs if needed."""
         db_json = self._get_db()
 
-        latest_versions = self.get_latest_versions()
-
-        for app_name in self.sources:
-            if app_name not in latest_versions:
+        for app_name, app_managers in self.sources.items():
+            version_sorted_manager_tuples = APKSchleuder.sort_managers_by_version(
+                app_managers, app_name
+            )
+            if not version_sorted_manager_tuples:
                 continue  # update failed
 
             local_version = db_json[app_name]['version']
-            remote_version = latest_versions[app_name]['version']
-            if remote_version > local_version or not db_json[app_name]['file']:
-                manager_name = latest_versions[app_name]['manager_name']
+            for remote_version, manager_name in version_sorted_manager_tuples:
+                if local_version >= remote_version and db_json[app_name]['file']:
+                    break  # no update found and local file is present
+
                 manager = self.sources[app_name][manager_name]
                 print(
                     'Updating', app_name,
@@ -116,11 +135,12 @@ class APKSchleuder(object):
                     db_json[app_name]['version'] = remote_version
                     db_json[app_name]['source'] = manager_name
                     db_json[app_name]['file'] = manager.apk_path
-                except Exception as err:
-                    warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
+                    break  # update successful
+                except Exception as exc:
+                    logging.warning('%r: %r', exc.__class__.__name__, str(exc))
+                    continue  # try next manager
 
         self._write_db(db_json)
-
 
     def verify(self):
         """Verify all APKs with info from managers that provide the same version."""
@@ -132,9 +152,19 @@ class APKSchleuder(object):
                 for manager in app_managers.values():
                     if manager.version == db_json[app_name]['version']:
                         manager.verify()
-            except Exception as err:
-                warn('{0}: {1}'.format(err.__class__.__name__, str(err)))
-
+            except Exception as exc:
+                logging.error(
+                    'Integrity of app %r could not be verified. Removing app.',
+                    app_name
+                )
+                logging.error('%r: %r', exc.__class__.__name__, str(exc))
+                try:
+                    os.remove(db_json[app_name]['file'])
+                except Exception as exc:
+                    logging.error(
+                        'Could not remove file %r.', db_json[app_name]['file']
+                    )
+                    logging.error('%r: %r', exc.__class__.__name__, str(exc))
 
     def get_status(self):
         """Return the version, file and source of all APKs."""

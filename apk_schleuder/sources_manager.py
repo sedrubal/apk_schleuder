@@ -2,21 +2,21 @@
 
 """Sources manager. Get meta information and APKs."""
 
-import os
-import re
 import abc
-import random
-import string
 import hashlib
-from warnings import warn
-from types import FunctionType
-from dateutil.parser import parse as parse_date
+import logging
+import os
+import random
+import re
+import string
 
 import requests
 from bs4 import BeautifulSoup
+from dateutil.parser import parse as parse_date
 
 from . import utils, verify
 from .config import SETTINGS
+
 
 def manager_factory(manager_type):
     """Return the manager class for manager_type."""
@@ -86,12 +86,12 @@ class DownloadBasedManager(BaseManager):
                 if all((x[0] in hashlib.algorithms_available for x in value)):
                     self.get_apk_checksums = value
                 else:
-                    warn(
-                        'Unrecognized hashing algorithm in %s.' %
+                    logging.error(
+                        'Unrecognized hashing algorithm in %s.',
                         ', '.join((x[0] for x in value))
                     )
-                    warn(
-                        'Recognized hashing algorithms are %s.' %
+                    logging.error(
+                        'Recognized hashing algorithms are %s.',
                         ', '.join(hashlib.algorithms_available)
                     )
 
@@ -99,12 +99,12 @@ class DownloadBasedManager(BaseManager):
                 if all((x[0] in ['SHA256', 'SHA1', 'MD5'] for x in value)):
                     self.apk_signature_fingerprints = value
                 else:
-                    warn(
-                        'Unrecognized signature fingerprint type in %s.' %
+                    logging.error(
+                        'Unrecognized signature fingerprint type in %s.',
                         ', '.join((x[0] for x in value))
                     )
-                    warn(
-                        'Recognized signature fingerprint types are %s' %
+                    logging.error(
+                        'Recognized signature fingerprint types are %s',
                         ', '.join(hashlib.algorithms_available)
                     )
 
@@ -128,7 +128,7 @@ class DownloadBasedManager(BaseManager):
 
         arg is a given config from config.SOURCES
         Example call:
-        >>> _get_fpr(self.get_apk_checksums['SHA256'])
+        >>> _get_checksum(self.get_apk_checksums['SHA256'])
         """
 
     @abc.abstractmethod
@@ -146,7 +146,9 @@ class DownloadBasedManager(BaseManager):
         checked_checksums = {}
         for method, get_checksum in self.get_apk_checksums:
             try:
-                checksum = self._get_checksum(get_checksum)
+                checksum = utils.clean_hexdigitstr(
+                    self._get_checksum(get_checksum)
+                )
                 if checked_checksums.get(method):
                     if checksum != checked_checksums[method]:
                         raise verify.ChecksumMissmatch(
@@ -165,7 +167,7 @@ class DownloadBasedManager(BaseManager):
                     )
                     checked_checksums[method] = checksum
             except verify.ChecksumMissmatch as err:
-                warn(str(err))
+                logging.error(str(err))
             else:
                 print('  - %s checksum matches' % method)
 
@@ -174,7 +176,7 @@ class DownloadBasedManager(BaseManager):
         try:
             verify.verify_apk_sig(self.apk_path)
         except verify.CryptoVerificationError as err:
-            warn(str(err))
+            logging.error(str(err))
         else:
             print('  - APK signature is valid')
 
@@ -188,7 +190,7 @@ class DownloadBasedManager(BaseManager):
         real_fprs = verify.get_apk_sig_fpr(self.apk_path)
         for method, get_fpr in self.apk_signature_fingerprints:
             try:
-                fpr = self._get_fpr(get_fpr).lower().replace(':', '').strip()
+                fpr = utils.clean_hexdigitstr(self._get_fpr(get_fpr))
                 if real_fprs[method]:
                     if fpr != real_fprs[method]:
                         raise verify.CryptoVerificationError(
@@ -199,7 +201,7 @@ class DownloadBasedManager(BaseManager):
                     else:
                         print('  - %s signature fingerprint matches' % method)
             except verify.ChecksumMissmatch as err:
-                warn(str(err))
+                logging.warning(str(err))
 
     def verify(self):
         """Verify the downloaded APK file if checksums or fprs configured."""
@@ -210,7 +212,7 @@ class DownloadBasedManager(BaseManager):
 
 class WebManager(DownloadBasedManager):
     """Download APKs from their project homepages."""
-    def __init__(self, name, url, get_apk_url, get_apk_version, **kwargs):
+    def __init__(self, name, url, apk_url, apk_version, **kwargs):
         """
         name: The name of the app to manage
         url: The URL of the HTML download page
@@ -219,8 +221,8 @@ class WebManager(DownloadBasedManager):
         """
         super(WebManager, self).__init__(name, **kwargs)
         self.url = url
-        self.get_apk_url = get_apk_url
-        self.get_apk_version = get_apk_version
+        self.get_apk_url = apk_url
+        self.get_apk_version = apk_version
         self._soup = None
 
     @property
@@ -229,7 +231,7 @@ class WebManager(DownloadBasedManager):
         if not self._soup:
             resp = requests.get(self.url)
             if not resp.ok:
-                warn('Status of request is not ok.')
+                logging.warning('Status of request is not ok.')
             self._soup = BeautifulSoup(resp.content, 'html.parser')
 
         return self._soup
@@ -240,18 +242,16 @@ class WebManager(DownloadBasedManager):
     @property
     def apk_url(self):
         if not self._apk_url:
-            self._apk_url = (
-                self.get_apk_url if isinstance(self.get_apk_url, str)
-                else self.get_apk_url(self.soup, self.version)
+            self._apk_url = utils.get_str_or_return_val(
+                self.get_apk_url, version=self.version, soup=self.soup,
             )
 
         return self._apk_url
 
     def _get_fpr(self, arg):
-        if isinstance(arg, FunctionType):
-            return arg(self.soup)
-        else:
-            return arg
+        return utils.get_str_or_return_val(
+            arg, version=self.version, soup=self.soup,
+        )
 
     _get_checksum = _get_fpr
 
@@ -287,7 +287,7 @@ class GitHubManager(DownloadBasedManager):
         if self._latest_apk_asset()['size'] == os.path.getsize(self.apk_path):
             print('  - File size matches GitHub API')
         else:
-            warn('  - File size differs from value in GitHub API.')
+            logging.error('  - File size differs from value in GitHub API.')
 
     def _latest_apk_asset(self):
         """Return the asset from api_json that seems to be the desired apk."""
@@ -311,10 +311,9 @@ class GitHubManager(DownloadBasedManager):
         return self._apk_url
 
     def _get_fpr(self, arg):
-        if isinstance(arg, FunctionType):
-            return arg(self.api_json)
-        else:
-            return arg
+        return utils.get_str_or_return_val(
+            arg, api_json=self.api_json,
+        )
 
     _get_checksum = _get_fpr
 
@@ -328,8 +327,8 @@ class ApkUpdateManager(WebManager):
     def __init__(self, name, project, **kwargs):
         super(ApkUpdateManager, self).__init__(
             name=name, url=ApkUpdateManager.URL.format(project=project),
-            get_apk_url=ApkUpdateManager.apkupdate_get_apk_url,
-            get_apk_version=ApkUpdateManager.apkupdate_get_apk_version,
+            apk_url=ApkUpdateManager.apkupdate_get_apk_url,
+            apk_version=ApkUpdateManager.apkupdate_get_apk_version,
             **kwargs
         )
         self.get_apk_checksums += [
@@ -341,29 +340,27 @@ class ApkUpdateManager(WebManager):
         )
 
     @staticmethod
-    def apkupdate_get_md5_sum(soup):
+    def apkupdate_get_md5_sum(soup, **_):
         """Return the MD5 sum from apkupdate.com site."""
-        return soup(text=re.compile('File APK Md5:'))[0].next.text.strip()
+        return soup.find(text=re.compile('File APK Md5:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_sha1_sum(soup):
+    def apkupdate_get_sha1_sum(soup, **_):
         """Return the SHA1 sum from apkupdate.com site."""
-        return soup(text=re.compile('File APK Sha1:'))[0].next.text.strip()
+        return soup.find(text=re.compile('File APK Sha1:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_apk_sig_fpr(soup):
+    def apkupdate_get_apk_sig_fpr(soup, **_):
         """Return the fpr of the apk sign. from apkupdate.com site."""
-        return soup(text=re.compile('APK Signature:'))[0].next.text.strip()
+        return soup.find(text=re.compile('APK Signature:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_apk_url(soup, _):
+    def apkupdate_get_apk_url(soup, **_):
         """Return the download url for the APK on apkupdate.com site."""
         build_id = list(
             soup.select('.apks .title span')[0].children
         )[1].strip().split(' ')[1].strip('()')
-        date = parse_date(
-            soup('span', text=re.compile('Publish Date'))[0].next.next.strip()
-        )
+        date = parse_date(soup.find(text=re.compile('\s*Date:\s*')).next)
         apk_id = soup.select('a[data-tag]')[0].\
             attrs['data-tag'][len('apkupdate-'):]
         rnd = ''.join((
@@ -393,12 +390,12 @@ class ApkPlzManager(WebManager):
         super(ApkPlzManager, self).__init__(
             name=name,
             url=ApkPlzManager.URL.format(project=project),
-            get_apk_url=self.apkplz_get_apk_url,
-            get_apk_version=ApkPlzManager.apkplz_get_apk_version,
+            apk_url=self.apkplz_get_apk_url,
+            apk_version=ApkPlzManager.apkplz_get_apk_version,
             **kwargs)
         self.project = project
 
-    def apkplz_get_apk_url(self, soup, version):
+    def apkplz_get_apk_url(self, soup, **_):
         """Return the download url for the APK on apkplz.com."""
         apk_name=soup.select('#download_form')[0]. \
             attrs['action'].split('/')[-1]

@@ -2,7 +2,9 @@
 
 """Some utils."""
 
-from warnings import warn
+import logging
+import string
+
 import requests
 
 
@@ -17,23 +19,30 @@ def download(url, local_filename):
             if chunk:
                 local_file.write(chunk)
 
-
-def check_single_result(results):
-    """Check if the length of results is 1. Otherwise print a warning."""
+def get_single_result(results):
+    """Return first element of a list. Print a warning if len(result) > 1."""
     if len(results) > 1:
-        warn('Expected to find only one result for selector, but found more.')
+        logging.warning(
+            'Expected to find only one result for selector, but found more.'
+        )
     elif len(results) < 1:
-        warn('Expected to find one result for selector, but found none.')
+        raise IndexError('There is no result.')
 
+    return results[0]
 
-def get_apk_href(soup, _):
+def get_apk_href(soup, **_):
     """Return the href value of the first .apk href link in soup."""
     urls = soup.select('a[href$=.apk]')
-    check_single_result(urls)
-
-    return urls[0].attrs['href']
-
+    return get_single_result(urls).attrs['href']
 
 def clean_version_string(version_str):
     """Return a cleaned version string."""
     return version_str.lower().lstrip('v').replace('-release', '')
+
+def clean_hexdigitstr(fingerprint):
+    """Return a cleaned fingerprint or checksum string."""
+    return ''.join((c.lower() for c in fingerprint if c in string.hexdigits))
+
+def get_str_or_return_val(arg, **kwargs):
+    """Return arg(**kwargs) if arg is a function, else arg."""
+    return arg(**kwargs) if callable(arg) else arg.format(**kwargs)
