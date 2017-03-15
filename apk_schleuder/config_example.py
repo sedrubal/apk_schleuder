@@ -74,6 +74,7 @@ SOURCES = {
     'wire': {
         'wire.com': {
             'type': 'web',
+            'priority': 10,
             'url': 'https://wire.com/download/',
             'apk_url': get_apk_href,
             'apk_version': get_wire_version,
@@ -154,6 +155,7 @@ SOURCES = {
     'signal': {
         'signal.org': {
             'type': 'web',
+            'priority': 10,
             'url': 'https://signal.org/android/apk/',
             'apk_url': 'https://updates.signal.org/android/Signal-website-release-{version}.apk',
             'apk_version': get_signal_version,

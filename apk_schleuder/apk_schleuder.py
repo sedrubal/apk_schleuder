@@ -8,6 +8,8 @@ import os
 from collections import namedtuple
 from distutils.version import LooseVersion
 
+from operator import attrgetter
+
 from .config import SETTINGS
 from .sources_manager import manager_factory
 
@@ -38,17 +40,17 @@ class APKSchleuder(object):
     @staticmethod
     def sort_managers_by_version(app_managers, app_name):
         """
-        Return a list of managers sorted by their latest version like this:
+        Return a list of managers sorted by their latest version and priority.
 
         >>> get_latest_version()
         [
-            ('1.33.7', 'manager_name1'),
-            ('1.33.7', 'manager_name2'),
-            ('1.33.6', 'manager_name3'),
+            ('1.33.7', 1, 'manager_name1'),
+            ('1.33.7', 0, 'manager_name2'),
+            ('1.33.6', 0, 'manager_name3'),
         ]
         """
         VersionManagerTuple = namedtuple(
-            'VersionManagerTuple', ['version', 'manager_name']
+            'VersionManagerTuple', ['version', 'priority', 'manager_name']
         )
         version_manager_tuples = []
         for manager_name, manager in app_managers.items():
@@ -57,6 +59,7 @@ class APKSchleuder(object):
                 manager_version.parse  # test if version is ok
                 version_manager_tuples.append(VersionManagerTuple(
                     version=manager_version,
+                    priority=manager.priority,
                     manager_name=manager_name,
                 ))
             except Exception as exc:
@@ -66,7 +69,11 @@ class APKSchleuder(object):
                 )
                 logging.warning('%s: %s', exc.__class__.__name__, str(exc))
 
-        return sorted(version_manager_tuples, reverse=True)
+        return sorted(
+            version_manager_tuples,
+            reverse=True,
+            key=attrgetter('version', 'priority'),
+        )
 
     def _get_db(self):
         """Open, read and update the db json."""
@@ -119,7 +126,7 @@ class APKSchleuder(object):
                 continue  # update failed
 
             local_version = db_json[app_name]['version']
-            for remote_version, manager_name in version_sorted_manager_tuples:
+            for remote_version, _, manager_name in version_sorted_manager_tuples:
                 if local_version >= remote_version and db_json[app_name]['file']:
                     break  # no update found and local file is present
 

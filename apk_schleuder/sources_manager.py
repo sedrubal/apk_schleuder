@@ -33,9 +33,10 @@ class BaseManager(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
+    def __init__(self, name, priority=0):
         self.name = name
         self._version = None
+        self.priority = priority
 
     @property
     def apk_path(self):
@@ -76,8 +77,8 @@ class DownloadBasedManager(BaseManager):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, **kwargs):
-        super(DownloadBasedManager, self).__init__(name)
+    def __init__(self, name, priority=0, **kwargs):
+        super(DownloadBasedManager, self).__init__(name, priority)
         self._apk_url = None
         self.get_apk_checksums = []
         self.apk_signature_fingerprints = []
@@ -212,14 +213,14 @@ class DownloadBasedManager(BaseManager):
 
 class WebManager(DownloadBasedManager):
     """Download APKs from their project homepages."""
-    def __init__(self, name, url, apk_url, apk_version, **kwargs):
+    def __init__(self, name, url, apk_url, apk_version, priority=2, **kwargs):
         """
         name: The name of the app to manage
         url: The URL of the HTML download page
         get_apk_url: A function to parse the APK download URL from dl page
         get_apk_version: A function to parse the APK Version from dl page
         """
-        super(WebManager, self).__init__(name, **kwargs)
+        super(WebManager, self).__init__(name, priority=priority, **kwargs)
         self.url = url
         self.get_apk_url = apk_url
         self.get_apk_version = apk_version
@@ -260,8 +261,8 @@ class GitHubManager(DownloadBasedManager):
     """Download APKs from GitHub Release page."""
     RELEASE_API = 'https://api.github.com/repos/{repo}/releases/latest'
 
-    def __init__(self, name, repo, **kwargs):
-        super(GitHubManager, self).__init__(name, **kwargs)
+    def __init__(self, name, repo, priority=1, **kwargs):
+        super(GitHubManager, self).__init__(name, priority=priority, **kwargs)
         self.repo = repo
         self._api_json = None
 
@@ -320,13 +321,15 @@ class GitHubManager(DownloadBasedManager):
 
 class ApkUpdateManager(WebManager):
     """Download APKs from apkupdate.com."""
+
     URL = 'https://apkupdate.com/apk/{project}'
     APK_DOWNLOAD_URL = 'http://file2.apkupdate.com/dl/' + \
         '{rnd}/download/{year}/{month:02}/{apk_id}-{build_id}.apk'
 
     def __init__(self, name, project, **kwargs):
         super(ApkUpdateManager, self).__init__(
-            name=name, url=ApkUpdateManager.URL.format(project=project),
+            name=name,
+            url=ApkUpdateManager.URL.format(project=project),
             apk_url=ApkUpdateManager.apkupdate_get_apk_url,
             apk_version=ApkUpdateManager.apkupdate_get_apk_version,
             **kwargs
