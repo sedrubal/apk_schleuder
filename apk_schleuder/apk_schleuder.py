@@ -159,15 +159,15 @@ class APKSchleuder(object):
         db_json = self._get_db()
 
         for app_name, app_managers in self.sources.items():
-            print(' - Verifying app %s...' % app_name)
+            print(' - Verifying app {}...'.format(app_name))
             try:
-                for manager in app_managers.values():
+                for manager_name, manager in app_managers.items():
                     if manager.version == db_json[app_name]['version']:
                         manager.verify()
             except Exception as exc:  # NOQA
                 logging.error(
-                    'Integrity of app %r could not be verified. Removing app.',
-                    app_name
+                    'Integrity of app %r using manager %r could not be verified. Removing app.',
+                    app_name, manager_name
                 )
                 logging.error('%r: %r', exc.__class__.__name__, str(exc))
                 try:

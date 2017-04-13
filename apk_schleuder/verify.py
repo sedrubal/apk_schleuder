@@ -35,15 +35,14 @@ class ChecksumMissmatch(CryptoVerificationError):
         )
 
 
-def verify_checksum(file_name, chksum, method='SHA256'):
-    """Verify the sha256sum of file_name. Raise an error if it missmatches."""
+def get_file_checksum(file_name, method='SHA256'):
+    """Returns the method checksum for file_name."""
     hasher = hashlib.new(method)
     with open(file_name, "rb") as apk_file:
         for chunk in iter(lambda: apk_file.read(4096), b""):
             hasher.update(chunk)
 
-    if hasher.hexdigest() != chksum:
-        raise ChecksumMissmatch(file_name, method, chksum, hasher.hexdigest())
+    return hasher.hexdigest()
 
 
 def _extract_certificate(file_name):
