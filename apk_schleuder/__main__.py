@@ -16,14 +16,14 @@ from .apk_schleuder import APKSchleuder
 def print_status(status):
     """Pretty prints the status output by APKSchleuder.get_status."""
     headers = ['name', 'local version', 'source', 'APK file']
-    table_data = [
-        [
+    table_data = sorted((
+        (
             name,
             data.get('version', '-'),
             data.get('source', '-'),
             data.get('file', '-'),
-        ] for name, data in status.items()
-    ]
+        ) for name, data in status.items()
+    ))
     print(tabulate(table_data, headers=headers))
 
 
