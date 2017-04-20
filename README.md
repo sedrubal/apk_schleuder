@@ -4,11 +4,21 @@ Download apks from shady sources and put them into a f-droid repo.
 
 [![Code Health](https://landscape.io/github/sedrubal/apk_schleuder/master/landscape.svg?style=flat)](https://landscape.io/github/sedrubal/apk_schleuder/master)
 
+## Installation
+
+- (Create a virtualenv: `python3 -m virtualenv -p python3 --system-site-packages .venv && . ./.venv/bin/activate`)
+- Install apk_schleuder: `pip install git+https://github.com/sedrubal/apk_schleuder.git` or clone the repo and run `./setup.py install`
+- Install (java) keytool and jarsigner
+
 ## Config
 
 Create a config under `config.py`. You can also create a symlink to `config_example.py`.
 
-### Add new APKs
+## Usage
+
+`python3 -m apk_schleuder`
+
+## Add new APKs
 
 - find a source to download the APK (e.g. apkupdate.com, apkplz.com, github.com, a website, ...)
 - create a new entry in `config.py`:
@@ -35,16 +45,6 @@ Create a config under `config.py`. You can also create a symlink to `config_exam
 - unzip it
 - search for the signing certificate in folder `META-INF` (e.g. `CERT.RSA`)
 - run `keytool -printcert -file $certfile` and put the fingerprints into `config.py`
-
-## Installation
-
-- Install f-droid
-- Install python3-requests
-- Install (java) keytool and jarsigner
-
-## Usage
-
-`python3 -m apk_schleuder`
 
 ## License
 
