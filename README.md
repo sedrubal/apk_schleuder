@@ -1,6 +1,6 @@
 # APK Schleuder
 
-Download apks from shady sources and put them into a f-droid repo.
+Download APKs from shady sources and put them into a f-droid repo.
 
 [![Code Health](https://landscape.io/github/sedrubal/apk_schleuder/master/landscape.svg?style=flat)](https://landscape.io/github/sedrubal/apk_schleuder/master)
 
@@ -20,7 +20,7 @@ Create a config under `config.py`. You can also create a symlink to `config_exam
 
 ## Add new APKs
 
-- find a source to download the APK (e.g. apkupdate.com, apkplz.com, github.com, a website, ...)
+- find a source to download the APK (e.g. apkdownloadmirror.com, apkplz.com, github.com, a website, ...)
 - create a new entry in `config.py`:
 
 ```py
@@ -41,7 +41,7 @@ Create a config under `config.py`. You can also create a symlink to `config_exam
 
 ### Get the fingerprints
 
-- Get an APK from a "trustable" source
+- Get an APK from a trustworthy source
 - unzip it
 - search for the signing certificate in folder `META-INF` (e.g. `CERT.RSA`)
 - run `keytool -printcert -file $certfile` and put the fingerprints into `config.py`

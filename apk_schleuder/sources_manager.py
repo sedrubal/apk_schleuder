@@ -22,7 +22,7 @@ def manager_factory(manager_type):
     return {
         'web': WebManager,
         'github': GitHubManager,
-        'apkupdate': ApkUpdateManager,
+        'apkdownloadmirror': ApkDownloadMirrorManager,
         'apkplz': ApkPlzManager,
     }[manager_type]
 
@@ -319,47 +319,47 @@ class GitHubManager(DownloadBasedManager):
     _get_checksum = _get_fpr
 
 
-class ApkUpdateManager(WebManager):
-    """Download APKs from apkupdate.com."""
+class ApkDownloadMirrorManager(WebManager):
+    """Download APKs from apkdownloadmirror.com."""
 
-    URL = 'https://apkupdate.com/apk/{project}'
+    URL = 'https://apkdownloadmirror.com/apk/{project}'
     APK_DOWNLOAD_URL = 'http://file2.apkupdate.com/dl/' + \
         '{rnd}/download/{year}/{month:02}/{apk_id}-{build_id}.apk'
 
     def __init__(self, name, project, **kwargs):
-        super(ApkUpdateManager, self).__init__(
+        super(ApkDownloadMirrorManager, self).__init__(
             name=name,
-            url=ApkUpdateManager.URL.format(project=project),
-            apk_url=ApkUpdateManager.apkupdate_get_apk_url,
-            apk_version=ApkUpdateManager.apkupdate_get_apk_version,
+            url=ApkDownloadMirrorManager.URL.format(project=project),
+            apk_url=ApkDownloadMirrorManager.apkdownloadmirror_get_apk_url,
+            apk_version=ApkDownloadMirrorManager.apkdownloadmirror_get_apk_version,
             **kwargs
         )
         self.get_apk_checksums += [
-            ('SHA1', ApkUpdateManager.apkupdate_get_sha1_sum),
-            ('MD5', ApkUpdateManager.apkupdate_get_md5_sum),
+            ('SHA1', ApkDownloadMirrorManager.apkdownloadmirror_get_sha1_sum),
+            ('MD5', ApkDownloadMirrorManager.apkdownloadmirror_get_md5_sum),
         ]
         self.apk_signature_fingerprints.append(
-            ('SHA1', ApkUpdateManager.apkupdate_get_apk_sig_fpr),
+            ('SHA1', ApkDownloadMirrorManager.apkdownloadmirror_get_apk_sig_fpr),
         )
 
     @staticmethod
-    def apkupdate_get_md5_sum(soup, **_):
-        """Return the MD5 sum from apkupdate.com site."""
+    def apkdownloadmirror_get_md5_sum(soup, **_):
+        """Return the MD5 sum from apkdownloadmirror.com site."""
         return soup.find(text=re.compile(r'File APK Md5:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_sha1_sum(soup, **_):
-        """Return the SHA1 sum from apkupdate.com site."""
+    def apkdownloadmirror_get_sha1_sum(soup, **_):
+        """Return the SHA1 sum from apkdownloadmirror.com site."""
         return soup.find(text=re.compile(r'File APK Sha1:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_apk_sig_fpr(soup, **_):
-        """Return the fpr of the apk sign. from apkupdate.com site."""
-        return soup.find(text=re.compile(r'APK Signature:')).next.text.strip()
+    def apkdownloadmirror_get_apk_sig_fpr(soup, **_):
+        """Return the fpr of the apk sign. from apkdownloadmirror.com site."""
+        return soup.find(text=re.compile(r'Signature:')).next.text.strip()
 
     @staticmethod
-    def apkupdate_get_apk_url(soup, **_):
-        """Return the download url for the APK on apkupdate.com site."""
+    def apkdownloadmirror_get_apk_url(soup, **_):
+        """Return the download url for the APK on apkdownloadmirror.com site."""
         build_id = list(
             soup.select('.apks .title span')[0].children
         )[1].strip().split(' ')[1].strip('()')
@@ -372,7 +372,7 @@ class ApkUpdateManager(WebManager):
                 for _ in range(62)
             )
         )
-        return ApkUpdateManager.APK_DOWNLOAD_URL.format(
+        return ApkDownloadMirrorManager.APK_DOWNLOAD_URL.format(
             rnd=rnd,
             year=date.year,
             month=date.month,
@@ -381,8 +381,8 @@ class ApkUpdateManager(WebManager):
         )
 
     @staticmethod
-    def apkupdate_get_apk_version(soup):
-        """Return the latest version of the APK on apkupdate.com site."""
+    def apkdownloadmirror_get_apk_version(soup):
+        """Return the latest version of the APK on apkdownloadmirror.com site."""
         return list(
             soup.select('.apks .title span')[0].children
         )[1].strip().split(' ')[0]

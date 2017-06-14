@@ -94,8 +94,8 @@ SOURCES = {
                 ('MD5', 'F5:20:FE:7D:5D:92:16:F2:BB:25:4E:AC:42:B1:46:7F'),
             ],
         },
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'com.wire/wire',
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -175,8 +175,8 @@ SOURCES = {
                 ('MD5', 'D9:0D:B3:64:E3:2F:A3:A7:BD:A4:C2:90:FB:65:E3:10'),
             ],
         },
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'org.thoughtcrime.securesms/signal-private-messenger',
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -197,8 +197,8 @@ SOURCES = {
         },
     },
     'wpsoffice': {
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'cn.wps.moffice_eng/wps-office-pdf',
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -219,8 +219,8 @@ SOURCES = {
         },
     },
     'soundcloud': {
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'com.soundcloud.android/soundcloud-music-amp-audio',
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -241,8 +241,8 @@ SOURCES = {
         },
     },
     'mixcloud': {
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'com.mixcloud.player/mixcloud-radio-amp-dj-mixes',
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -263,8 +263,8 @@ SOURCES = {
         },
     },
     'trello': {
-        'apkupdate': {
-            'type': 'apkupdate',
+        'apkdownloadmirror': {
+            'type': 'apkdownloadmirror',
             'project': 'com.trello/trello',
             'apk_signature_fingerprints': [
                 ('SHA256',
