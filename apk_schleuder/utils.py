@@ -2,6 +2,7 @@
 """Some utils."""
 
 import logging
+import os
 import string
 
 import requests
@@ -50,3 +51,13 @@ def clean_hexdigitstr(fingerprint):
 def get_str_or_return_val(arg, **kwargs):
     """Return arg(**kwargs) if arg is a function, else arg."""
     return arg(**kwargs) if callable(arg) else arg.format(**kwargs)
+
+def remove_file(file_name):
+    """Remove file file_name and report errors."""
+    try:
+        os.remove(file_name)
+    except Exception as exc:  # NOQA
+        logging.error(
+            'Could not remove file %r.', file_name
+        )
+        logging.error('%r: %r', exc.__class__.__name__, str(exc))

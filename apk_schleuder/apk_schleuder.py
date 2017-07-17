@@ -6,11 +6,11 @@ import logging
 import os
 from collections import namedtuple
 from distutils.version import LooseVersion
-
 from operator import attrgetter
 
 from .config import SETTINGS
 from .sources_manager import manager_factory
+from .utils import remove_file
 
 
 class APKSchleuder(object):
@@ -152,6 +152,13 @@ class APKSchleuder(object):
                     logging.warning('%r: %r', exc.__class__.__name__, str(exc))
                     continue  # try next manager
 
+        # remove apps that are not in config any more
+        for app_name in tuple(db_json.keys()):
+            if app_name not in self.sources:
+                print('Removing unconfigured app', app_name)
+                remove_file(db_json[app_name]['file'])
+                del db_json[app_name]
+
         self._write_db(db_json)
 
     def verify(self):
@@ -170,13 +177,7 @@ class APKSchleuder(object):
                     app_name, manager_name
                 )
                 logging.error('%r: %r', exc.__class__.__name__, str(exc))
-                try:
-                    os.remove(db_json[app_name]['file'])
-                except Exception as exc:  # NOQA
-                    logging.error(
-                        'Could not remove file %r.', db_json[app_name]['file']
-                    )
-                    logging.error('%r: %r', exc.__class__.__name__, str(exc))
+                remove_file(db_json[app_name]['file'])
 
     def get_status(self):
         """Return the version, file and source of all APKs."""
