@@ -145,15 +145,15 @@ SOURCES = {
             ],
         },
     },
-    'mattermost': {
+    'mattermost-mobile': {
         'github.com': {
             'type': 'github',
-            'repo': 'mattermost/android',
+            'repo': 'mattermost/mattermost-mobile',
             'apk_signature_fingerprints': [
                 ('SHA256',
-'B1:36:5A:3D:8E:ED:77:EC:1E:D8:43:F8:36:D1:20:46:9A:4F:01:45:96:39:4C:FC:CD:20:79:57:1F:AA:E5:8C'),
-                ('SHA1', 'E0:98:D2:8D:54:DB:C2:27:EA:50:BD:B4:A2:97:53:70:AB:A3:12:A8'),
-                ('MD5', 'A4:0C:4A:E4:DE:01:5B:A5:E7:31:12:B4:14:76:F6:ED'),
+'5C:A7:32:AB:1F:65:7D:D9:E4:BE:FF:08:40:A8:B9:D1:9C:59:C3:0D:E3:AD:CF:4B:E6:A2:92:72:26:C1:1F:4F'),
+                ('SHA1', 'E3:FB:91:EC:B1:A9:C2:3A:CF:64:31:FB:AC:EB:15:AC:68:A2:18:31'),
+                ('MD5', '56:DD:47:FC:85:16:3B:01:90:2A:89:BC:A7:2C:4D:95'),
             ],
         },
     },
