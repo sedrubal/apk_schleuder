@@ -92,6 +92,6 @@ def get_apk_sig_fpr(file_name):
 def verify_apk_sig(apk_file_name):
     """Verify the APK signature."""
     if call(
-        [SETTINGS['jarsigner'], '-verify', apk_file_name], stdout=DEVNULL
+        [SETTINGS['apksigner'], 'verify', apk_file_name], stdout=DEVNULL
     ) != 0:
         raise CryptoVerificationError(apk_file_name)

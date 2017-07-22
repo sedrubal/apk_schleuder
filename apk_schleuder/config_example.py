@@ -306,6 +306,6 @@ SETTINGS = {
     ),
     'temp_dir': os.path.join(tempfile.gettempdir(), 'apk_schleuder/'),
     'keytool': 'keytool',
-    'jarsigner': 'jarsigner',
+    'apksigner': '/opt/android_sdk/build-tools/25.0.1/apksigner',
 }
 SETTINGS['db_file'] = os.path.join(SETTINGS['repo_dir'], 'db.json')

@@ -8,7 +8,7 @@ Download APKs from shady sources and put them into a f-droid repo.
 
 - (Create a virtualenv: `python3 -m virtualenv -p python3 --system-site-packages .venv && . ./.venv/bin/activate`)
 - Install apk_schleuder: `pip install git+https://github.com/sedrubal/apk_schleuder.git` or clone the repo and run `./setup.py install`
-- Install (java) keytool and jarsigner
+- Install (Java) keytool and android sdk (for apksigner)
 
 ## Config
 
