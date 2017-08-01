@@ -132,16 +132,26 @@ class APKSchleuder(object):
                     break  # no update found and local file is present
 
                 manager = self.sources[app_name][manager_name]
-                print(
-                    'Updating',
-                    app_name,
-                    'from',
-                    local_version,
-                    'to',
-                    remote_version,
-                    'using',
-                    manager_name,
-                )
+                if db_json[app_name]['file']:
+                    print(
+                        'Updating',
+                        app_name,
+                        'from',
+                        local_version,
+                        'to',
+                        remote_version,
+                        'using',
+                        manager_name,
+                    )
+                else:
+                    print(
+                        'Downloading',
+                        app_name,
+                        'version',
+                        remote_version,
+                        'using',
+                        manager_name,
+                    )
                 try:
                     manager.get_apk()
                     db_json[app_name]['version'] = remote_version
