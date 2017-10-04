@@ -421,4 +421,6 @@ class ApkPlzManager(WebManager):
     @staticmethod
     def apkplz_get_apk_version(soup):
         """Return the version of the latest APK on apkplz.com."""
-        return soup.select('span[itemprop=softwareVersion]')[0].text
+        return utils.get_single_result(
+            soup.select('li.version')
+        ).text.lower().replace('version:', '').strip()

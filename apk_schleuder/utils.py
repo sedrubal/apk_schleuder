@@ -27,7 +27,7 @@ def get_single_result(results):
             'Expected to find only one result for selector, but found more.'
         )
     elif len(results) < 1:
-        raise IndexError('There is no result.')
+        raise IndexError('There is no result for the selector.')
 
     return results[0]
 

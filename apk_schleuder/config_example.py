@@ -133,18 +133,6 @@ SOURCES = {
             ],
         },
     },
-    'faufablab': {
-        'github.com': {
-            'type': 'github',
-            'repo': 'FAU-Inf2/fablab-android',
-            'apk_signature_fingerprints': [
-                ('SHA256',
-'9E:E0:7F:90:F6:E3:BE:97:CD:AC:E8:5D:00:AE:8C:84:13:99:25:FB:A5:7C:0B:D2:8A:90:54:F8:37:10:E9:62'),
-                ('SHA1', '70:FB:ED:80:C4:6C:B1:32:00:C7:30:81:27:69:5D:8D:AB:1C:69:8B'),
-                ('MD5', 'CC:54:03:C3:4A:0D:05:02:0E:A0:49:1A:BD:AC:81:34'),
-            ],
-        },
-    },
     'mattermost-mobile': {
         'github.com': {
             'type': 'github',
