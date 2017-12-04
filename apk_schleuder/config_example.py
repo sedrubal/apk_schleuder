@@ -12,31 +12,27 @@ from .utils import get_apk_href, get_single_result
 
 def get_wire_version(soup):
     """Return the version string found in HTML BeautifulSoup soup."""
-    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
-    text = info.attrs['title'].strip().lower()
-    return re.search(
-        r'^version: (?P<version>(\d+\.)+\d+) ', text
+    info = get_single_result(soup.select('#details-android')).findNext('p').text
+    return re.match(
+        r'.*\s(?P<version>\d+\.\d+\.\d+)\s.*', info, re.DOTALL
     ).group('version')
 
 
 def get_wire_sha256sum(soup, **_):
     """Return the sha256sum specified on download homepage."""
-    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
-    text = info.attrs['title']. \
-        lower().replace(' ', '').replace('\n', '').replace('<br>', '')
+    info = get_single_result(soup.select('#details-android')) \
+            .findNext('p').findNext('p').findNext('p').text.lower()
     return re.search(
-        r'.*filechecksum\(sha256\):(?P<checksum>[0-9a-f]{64}).*', text
+        r'.*(?P<checksum>[0-9a-f]{64}).*', info, re.DOTALL
     ).group('checksum')
 
 
 def get_wire_signature_sha256(soup, **_):
     """Return the sha256 fpr of the APK signature given on the homepage."""
-    info = get_single_result(soup.select('a[href$=.apk]')).findNext('span')
-    text = info.attrs['title']. \
-        lower().replace(' ', '').replace('\n', '').replace('<br>', '')
+    info = get_single_result(soup.select('#details-android')) \
+            .findNext('p').findNext('p').text.lower()
     return re.search(
-        r'.*certificatefingerprint\(sha256\):(?P<checksum>[0-9a-f]{64}).*',
-        text
+        r'.*(?P<checksum>[0-9a-f]{64}).*', info, re.DOTALL
     ).group('checksum')
 
 
@@ -124,6 +120,20 @@ SOURCES = {
             'type': 'web',
             'url': 'https://www.mozilla.org/en-US/firefox/android/all/',
             'apk_url': 'https://download.mozilla.org/?product=fennec-latest&os=android&lang=en-US',
+            'apk_version': get_firefox_version,
+            'apk_signature_fingerprints': [
+                ('SHA256',
+'A7:8B:62:A5:16:5B:44:94:B2:FE:AD:9E:76:A2:80:D2:2D:93:7F:EE:62:51:AE:CE:59:94:46:B2:EA:31:9B:04'),
+                ('SHA1', '92:0F:48:76:A6:A5:7B:4A:6A:2F:4C:CA:F6:5F:7D:29:CE:26:FF:2C'),
+                ('MD5', 'B1:E1:BC:EE:27:33:02:5E:CE:94:56:E4:19:A8:14:A3'),
+            ],
+        },
+    },
+    'firefox-beta': {
+        'mozilla.org': {
+            'type': 'web',
+            'url': 'https://www.mozilla.org/en-US/firefox/android/beta/all/',
+            'apk_url': 'https://download.mozilla.org/?product=fennec-beta-latest&os=android&lang=en-US',
             'apk_version': get_firefox_version,
             'apk_signature_fingerprints': [
                 ('SHA256',
@@ -294,6 +304,6 @@ SETTINGS = {
     ),
     'temp_dir': os.path.join(tempfile.gettempdir(), 'apk_schleuder/'),
     'keytool': 'keytool',
-    'apksigner': '/opt/android_sdk/build-tools/25.0.1/apksigner',
+    'apksigner': '/opt/android_sdk/build-tools/26.0.1/apksigner',
 }
 SETTINGS['db_file'] = os.path.join(SETTINGS['repo_dir'], 'db.json')

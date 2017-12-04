@@ -24,7 +24,8 @@ def get_single_result(results):
     """Return first element of a list. Print a warning if len(result) > 1."""
     if len(results) > 1:
         logging.warning(
-            'Expected to find only one result for selector, but found more.'
+            'Expected to find only one result for selector, but found more.\n'
+            'Using: %s', str(results[0]),
         )
     elif len(results) < 1:
         raise IndexError('There is no result for the selector.')
